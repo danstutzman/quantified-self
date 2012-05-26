@@ -1,0 +1,95 @@
+%html
+  %head
+    :javascript
+      var currentQuestion = 1;
+
+      function moveFocus() {
+        if (currentQuestion <= 3) {
+          document.getElementById('radio' + currentQuestion + '1').focus();
+        } else {
+          document.getElementById('submit').focus();
+        }
+      }
+
+      function handleKey() {
+        console.log(event.keyCode);
+
+        var answer = 0;
+        if (event.keyCode == 48 + 1) {
+          answer = 1;
+        } else if (event.keyCode == 48 + 2) {
+          answer = 2;
+        } else if (event.keyCode == 48 + 3) {
+          answer = 3;
+        } else if (event.keyCode == 48 + 4) {
+          answer = 4;
+        }
+
+        if (answer > 0) {
+          var radio = document.getElementById(
+            'radio' + currentQuestion + answer);
+          radio.checked = true;
+          currentQuestion += 1;
+          moveFocus();
+        }
+      }
+
+      function myOnLoad() {
+        document.onkeyup = handleKey
+        moveFocus();
+        window.setTimeout(function() { moveFocus(); }, 500);
+      }
+  %body(onload='myOnLoad()')
+    %form(method='post')
+      Morning survey
+      %br
+      %br
+  
+      When did you get up?
+      %br
+      %input(type='radio' id='radio11' name='morning-sleepiness' value='1')
+      1 - With alarm (but woke up before)
+      %br
+      %input(type='radio' id='radio12' name='morning-sleepiness' value='2')
+      2 - With alarm
+      %br
+      %input(type='radio' id='radio13' name='morning-sleepiness' value='3')
+      3 - One snooze after alarm
+      %br
+      %input(type='radio' id='radio14' name='morning-sleepiness' value='4')
+      4 - Many snoozes after alarm
+      %br
+      %br
+  
+      How strongly do you feel a compulsion to read?
+      %br
+      %input(type='radio' id='radio21' name='morning-compulsion' value='1')
+      1 - None
+      %br
+      %input(type='radio' id='radio22' name='morning-compulsion' value='2')
+      2 - Slight
+      %br
+      %input(type='radio' id='radio23' name='morning-compulsion' value='3')
+      3 - Strong
+      %br
+      %br
+  
+      How miserable do you feel?
+      %br
+      %input(type='radio' id='radio31' name='morning-misery' value='1')
+      1 - Happy
+      %br
+      %input(type='radio' id='radio32' name='morning-misery' value='2')
+      2 - Okay/resigned
+      %br
+      %input(type='radio' id='radio33' name='morning-misery' value='3')
+      3 - Miserable/angry
+      %br
+      %br
+
+      %input(type='submit' id='submit' value='Finish')
+  / How itchy
+  / How time pressure
+  / How unhappy
+  / How hard to wake up in the morning
+  / When woke up in the morning
