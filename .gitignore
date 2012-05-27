@@ -1,2 +1,4 @@
 form.html
 gmail-password
+*.log
+.*.swp
