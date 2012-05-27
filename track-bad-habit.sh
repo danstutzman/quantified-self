@@ -1,2 +1,3 @@
 #!/bin/sh
-echo `/bin/date`, "$1" >> /Users/dstutzman/Documents/quantified-self/track-bad-habit.txt
+cd `dirname $0`
+echo `/bin/date`, "$1" >> track-bad-habit.txt
