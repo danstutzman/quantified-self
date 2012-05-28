@@ -26,8 +26,9 @@ class Log
     is_finish_tentative
   ]
   def initialize(*args)
-    #raise "Expected 4 args, got #{args.size}" if args.size != 4
-    @start, @finish, @comment, @contributing_actions = args
+    raise "Expected 3 args, got #{args.size}" if args.size != 3
+    @start, @finish, @comment = args
+    @contributing_actions = []
     @is_start_tentative, @is_finish_tentative = false, false
   end
 end
@@ -58,14 +59,19 @@ lines.each { |line|
   time, comment = line
   in_pm = time.match(/^(1[0-9]|2[0-3])/)
 
+  contributing_actions = [line.join(' ')]
   if comment == 'no'
     if logs.last.comment.nil?
-      logs.pop # remove last log
+      previous_log = logs.pop
+      contributing_actions =
+        previous_log.contributing_actions + contributing_actions
     end
     next
   elsif comment.match(/^actually (.*)$/)
     if logs.last.comment.nil?
-      logs.pop # remove last log
+      previous_log = logs.pop
+      contributing_actions =
+        previous_log.contributing_actions + contributing_actions
     end
     comment = $1
   elsif comment.match(/([0-9]+):([0-9]+) (.*) started$/)
@@ -100,6 +106,7 @@ lines.each { |line|
     else
       Log.new(time, nil, comment)
   end
+  new_log.contributing_actions = contributing_actions
   logs.push new_log
 
   just_was_on_break = am_on_break
@@ -115,7 +122,10 @@ logs.each { |log|
      new_logs.last && new_logs.last.finish.nil? &&
      log.comment == new_logs.last.comment
     last_log = new_logs.pop # remove last log
-    new_logs.push Log.new(last_log.start, log.finish, log.comment)
+    new_log = Log.new(last_log.start, log.finish, log.comment)
+    new_log.contributing_actions = last_log.contributing_actions +
+      log.contributing_actions
+    new_logs.push new_log
   else
     new_logs.push log
   end
@@ -140,4 +150,7 @@ logs.each { |log|
     log.start,  log.start && log.is_start_tentative ? '?' : ' ',
     log.finish, log.finish && log.is_finish_tentative ? '?' : ' ',
     log.comment)
+  log.contributing_actions.each { |action|
+    puts sprintf('%25s%s', '', action)
+  }
 }
