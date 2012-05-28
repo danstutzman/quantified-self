@@ -17,9 +17,18 @@ else
 end
 
 class Log
-  attr_reader :start, :finish, :comment
+  attr_accessor *%w[
+    start
+    finish
+    comment
+    contributing_actions
+    is_start_tentative
+    is_finish_tentative
+  ]
   def initialize(*args)
-    @start, @finish, @comment = args
+    #raise "Expected 4 args, got #{args.size}" if args.size != 4
+    @start, @finish, @comment, @contributing_actions = args
+    @is_start_tentative, @is_finish_tentative = false, false
   end
 end
 
@@ -113,6 +122,22 @@ logs.each { |log|
 }
 logs = new_logs
 
+last_finish = '00:00:00'
+logs.each_with_index { |log, i|
+  if log.start.nil?
+    log.start = last_finish
+    log.is_start_tentative = true
+  end
+  if log.finish.nil?
+    log.finish = logs[i + 1] ? logs[i + 1].start : (log.start || last_finish)
+    log.is_finish_tentative = true
+  end
+  last_finish = log.finish || log.start || last_finish
+}
+
 logs.each { |log|
-  puts sprintf('%-10s %-10s %s', log.start, log.finish, log.comment)
+  puts sprintf('%8s%s  %8s%s   %s',
+    log.start,  log.start && log.is_start_tentative ? '?' : ' ',
+    log.finish, log.finish && log.is_finish_tentative ? '?' : ' ',
+    log.comment)
 }
