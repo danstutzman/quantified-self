@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 require 'parsedate'
+require 'csv'
 
 # don't require sqlite3 gem; it could be a pain for the user to compile
 SQLITE='/usr/bin/sqlite3'
@@ -34,7 +35,7 @@ class Log
 end
 
 lines = []
-File.open(File.expand_path('../actions.txt', __FILE__)) { |file|
+File.open(File.expand_path('../../actions.txt', __FILE__)) { |file|
   file.each_line { |line|
     date_time = Time.local(*ParseDate.parsedate(line.split("\t")[0]))
     comment = line.split("\t")[1].strip
@@ -145,12 +146,30 @@ logs.each_with_index { |log, i|
   last_finish = log.finish || log.start || last_finish
 }
 
+if false
 logs.each { |log|
   puts sprintf('%8s%s  %8s%s   %s',
     log.start,  log.start && log.is_start_tentative ? '?' : ' ',
     log.finish, log.finish && log.is_finish_tentative ? '?' : ' ',
     log.comment)
-  log.contributing_actions.each { |action|
-    puts sprintf('%25s%s', '', action)
+  #log.contributing_actions.each { |action|
+  #  puts sprintf('%25s%s', '', action)
+  #}
+}
+end
+
+date = DAY.strftime('%Y-%m-%d')
+File.open(File.expand_path('../logs.csv', __FILE__), 'a') { |file|
+  CSV::Writer.generate(file) { |csv|
+    logs.each { |log|
+      csv << [date,
+        (log.start || '') +
+        ((log.start && log.is_start_tentative) ? '?' : ''),
+        (log.finish || '') +
+        ((log.finish && log.is_finish_tentative) ? '?' : ''),
+        '',
+        log.comment
+      ]
+    }
   }
 }
