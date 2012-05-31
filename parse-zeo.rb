@@ -26,6 +26,7 @@ File.open(File.expand_path('../parse-zeo.log', __FILE__), 'w') { |out_file|
       values = line.split(',')
       y, m, d = ParseDate.parsedate(values[headers.index('Sleep Date')])
       date = Time.local(y, m, d)
+      next if date.year < 2012
 
       out = {}
       FIELD_NAMES.each { |field_name|
