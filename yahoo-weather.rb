@@ -27,12 +27,12 @@ result_set.elements.each('rss/channel') do |element|
     out['sunrise-hour'] = safe {
       parts = ParseDate.parsedate(child.attributes['sunrise'])
       hours, minutes = parts[3], parts[4]
-      sprintf('%.1f', hours + (minutes / 60.0))
+      sprintf('%.3f', hours + (minutes / 60.0))
     }
     out['sunset-hour'] = safe {
       parts = ParseDate.parsedate(child.attributes['sunset'])
       hours, minutes = parts[3], parts[4]
-      sprintf('%.1f', hours + (minutes / 60.0))
+      sprintf('%.3f', hours + (minutes / 60.0))
     }
     break
   end
