@@ -172,4 +172,8 @@ File.open(File.expand_path('../logs.csv', __FILE__), 'a') { |file|
       ]
     }
   }
+
+  file.write "What went well today?\n"
+  file.write "What didn't go well today?\n"
+  file.write "What did you learn today?\n"
 }
