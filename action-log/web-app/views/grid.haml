@@ -1,0 +1,115 @@
+%html
+  %head
+    :css
+      input {
+        border: 0;
+      }
+      input.time {
+        text-align: right;
+        background-color: transparent;
+      }
+      input.text {
+        background-color: transparent;
+      }
+      input.submit {
+        width: 1px;
+        color: transparent;
+        background-color: transparent;
+      }
+      tr.odd {
+        background-color: #eee;
+      }
+      td.num {
+        color: #ccc;
+      }
+    %script= "num_lines = #{@rows.size};"
+    %script= "am_in_activity = #{@am_in_activity};"
+    %script= "hideWindowOnThisSubmit = true;"
+    :javascript
+      window.onload = function() {
+        var field = (am_in_activity) ? 'finish_time' : 'category';
+        var element = document.getElementById(field + (num_lines - 1));
+        element.focus();
+        if (am_in_activity) {
+          createSelection(element, 3, 5);
+        }
+      };
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          window.scrollTo(0, 99999);
+        }, 500);
+      });
+      function dofocus(element) {
+        element.rememberedValue = element.value;
+      }
+      function doblur(element) {
+        if (element.value != element.rememberedValue) {
+          element.style.backgroundColor = '#ffcccc'; // light red
+        }
+      }
+      function createSelection(field, start, end) {
+        if( field.createTextRange ) {
+          var selRange = field.createTextRange();
+          selRange.collapse(true);
+          selRange.moveStart('character', start);
+          selRange.moveEnd('character', end-start);
+          selRange.select();
+        } else if( field.setSelectionRange ) {
+          field.setSelectionRange(start, end);
+        } else if( field.selectionStart ) {
+          field.selectionStart = start;
+          field.selectionEnd = end;
+        }
+      }
+      function formSubmit() {
+        if (hideWindowOnThisSubmit && window.ActionLogController) {
+          hideWindowOnThisSubmit = false;
+          window.ActionLogController.hideWindow();
+        }
+ 
+        return true;
+      }
+  %body
+    %table
+      %tr
+        %th Num
+        %th Start
+        %th Finish
+        %th Category
+        %th Notes
+      - @rows.each_with_index do |row, num|
+        %form(method='post' onsubmit='formSubmit()')
+          %tr{class: (num % 2 == 0) ? 'even' : 'odd'}
+            %td.num
+              =row[0]
+              %input{type: 'hidden', name: 'id', value: row[0]}
+            %td
+              - hm = (!@am_in_activity && row[1] == '') ?         |
+                Time.now.strftime('%H:%M') : no_seconds(row[1])   |
+              %input.time{type: 'text', name: 'start_time', id: "start_time#{num}",
+                          value: hm, size: 5,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+              - hms = (!@am_in_activity && row[1] == '') ?     |
+                Time.now.strftime('%H:%M:%S') : row[1]         |
+              %input{type: 'hidden', name: 'start_time_seconds', value: hms}
+            %td
+              - hm = (@am_in_activity && row[2] == '') ?          |
+                Time.now.strftime('%H:%M') : no_seconds(row[2])   |
+              %input.time{type: 'text', name: 'finish_time', id: "finish_time#{num}",
+                          value: hm, size: 5,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+              - hms = (@am_in_activity && row[2] == '') ?      |
+                Time.now.strftime('%H:%M:%S') : row[2]         |
+              %input{type: 'hidden', name: 'finish_time_seconds', value: hms}
+            %td
+              %input.text{type: 'text', name: 'category', id: "category#{num}",
+                          value: row[3], size: 20,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+            %td
+              %input.text{type: 'text', name: 'notes', id: "notes#{num}",
+                          value: row[4], size: 30,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+            %td
+              %input.submit{type: 'submit'}
+              %input{type: 'submit', name: 'delete', value: 'delete',
+                     onclick: 'hideWindowOnThisSubmit = false'}

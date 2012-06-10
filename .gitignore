@@ -9,3 +9,5 @@ actions.txt
 metrics.svg
 day-retrospective/logs.csv
 schedule.svg
+action-log/web-app/*.tsv
+action-log/web-app/next_id
