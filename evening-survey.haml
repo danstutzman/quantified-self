@@ -1,0 +1,31 @@
+%html
+  %head
+    :javascript
+      function myOnLoad() {
+        document.getElementById('went-well').focus();
+      }
+  %body(onload='myOnLoad()')
+    %form(method='post')
+      Evening survey
+      %br
+      %br
+  
+      What went well today?
+      %br
+      %input(type='text' id='went-well' name='evening-went-well')
+      %br
+      %br
+
+      What didn't go well today?
+      %br
+      %input(type='text' id='went-not-well' name='evening-went-not-well')
+      %br
+      %br
+  
+      What did you learn today?
+      %br
+      %input(type='text' id='learned-today' name='evening-learned-today')
+      %br
+      %br
+  
+      %input(type='submit' id='submit' value='Finish')

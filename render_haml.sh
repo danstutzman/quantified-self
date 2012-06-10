@@ -1,3 +1,3 @@
 #!/bin/sh
-haml form.haml > form.html
-open form.html
+haml morning-survey.haml > morning-survey.html
+haml evening-survey.haml > evening-survey.html
