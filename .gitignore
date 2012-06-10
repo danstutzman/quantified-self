@@ -11,3 +11,6 @@ day-retrospective/logs.csv
 schedule.svg
 action-log/web-app/*.tsv
 action-log/web-app/next_id
+.DS_Store
+action-log/mac-app/ActionLog.xcodeproj/xcuserdata
+action-log/mac-app/ActionLog.xcodeproj/project.xcworkspace
