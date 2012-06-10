@@ -2,7 +2,7 @@
 require 'parsedate'
 
 today = Time.now.strftime('%Y-%m-%d')
-notes_path = File.expand_path("../../action_log/#{today}.tsv", __FILE__)
+notes_path = File.expand_path("../action-log/web-app/#{today}.tsv", __FILE__)
 script_path = File.expand_path('../nag-about-lack-of-notes.sh', __FILE__)
 if File.exists?(notes_path)
   last_line = `tail -1 #{notes_path}`.split("\t")
