@@ -19,7 +19,7 @@ class Servlet < WEBrick::HTTPServlet::AbstractServlet
     response.status = 200
     response['Content-Type'] = 'text/html'
     response.body = "<html><body>
-      Responses received.
+      Responses received; closing window...
       <script>
         setTimeout(function() {
           window.open('', '_self', ''); 
