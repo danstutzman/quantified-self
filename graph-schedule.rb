@@ -176,6 +176,7 @@ date_to_actions.keys.sort.each { |date|
 # add tooltip at the end so it shows on top
 g = doc[0].add_element('g')
 g.attributes['id'] = 'tooltip'
+g.attributes['visibility'] = 'hidden'
 
 rect = g.add_element('rect')
 rect.attributes['id'] = 'tooltip'
@@ -183,9 +184,7 @@ rect.attributes['x'] = 0
 rect.attributes['y'] = 0
 rect.attributes['width'] = 100
 rect.attributes['height'] = 20
-#rect.attributes['visibility'] = 'hidden'
 rect.attributes['fill'] = 'white'
-#rect.attributes['visibility'] = 'hidden'
 
 text = g.add_element('text')
 text.attributes['id'] = 'tooltip'
