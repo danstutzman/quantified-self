@@ -14,6 +14,9 @@ Dir.glob('*.log') { |filename|
   File.open(filename) { |file|
     file.each_line { |line|
       date, key, value = line.split(',')
+
+      next if key.match(/-text$/)
+
       next if Time.local(*ParseDate.parsedate(date)) < Time.local(2012, 5, 25)
       date = Time.local(*ParseDate.parsedate(date)).to_i / (60 * 60 * 24)
     
