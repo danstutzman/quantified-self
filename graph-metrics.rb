@@ -10,7 +10,7 @@ LABEL_X = 220
 dates = {}
 keys = {}
 date2key2value = {}
-Dir.glob('*.log') { |filename|
+Dir.glob('data/*.log') { |filename|
   File.open(filename) { |file|
     file.each_line { |line|
       date, key, value = line.split(',')

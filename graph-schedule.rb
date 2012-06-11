@@ -7,6 +7,8 @@ require 'date'
 Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
 DAYS_SHOWN = 5
+DATA_PATH = File.expand_path('../data', __FILE__)
+ZEO_PATH = "#{DATA_PATH}/parse-zeo.log"
 
 def string_to_date(string)
   match = string.match(/([0-9]{4})-([0-9]{2})-([0-9]{2})/) \
@@ -147,7 +149,7 @@ date_to_actions.keys.sort.each { |date|
 
 date_to_start_sleep = {}
 date_to_finish_sleep = {}
-CSV.foreach('parse-zeo.log') { |row|
+CSV.foreach(ZEO_PATH) { |row|
   date, key, value = row
   if key == 'zeo-start-of-night-hour'
     date_to_start_sleep[string_to_date(date)] = value.to_f

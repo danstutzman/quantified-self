@@ -18,7 +18,7 @@ def subtract_dates(later_date, date)
   sprintf('%.2f', hour)
 end
 
-File.open(File.expand_path('../parse-zeo.log', __FILE__), 'w') { |out_file|
+File.open(File.expand_path('../data/parse-zeo.log', __FILE__), 'w') { |out_file|
   File.open(File.expand_path('../data/zeodata.csv', __FILE__)) { |in_file|
     headers = in_file.readline.split(',')
     headers.reject! { |header| header.match(/^SS/) }

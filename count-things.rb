@@ -30,7 +30,7 @@ out['count-of-gmail-sent-messages-today'] = safe {
 }
 
 today = Time.now.strftime('%Y-%m-%d')
-path = File.expand_path('../count-things.log', __FILE__)
+path = File.expand_path('../data/count-things.log', __FILE__)
 File.open(path, 'a') { |file|
   out.each { |field, value|
     file.write "#{today},#{field},#{value}\n"

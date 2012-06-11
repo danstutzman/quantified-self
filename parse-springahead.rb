@@ -2,9 +2,9 @@
 
 month = 5 # May
 month_adjust = -1 # start with previous month
-out_path = File.expand_path('../springahead-2012-may.log', __FILE__)
+out_path = File.expand_path('../data/springahead-2012-may.log', __FILE__)
 File.open(out_path, 'w') { |out_file|
-  File.open('springahead-2012-may.txt') { |in_file|
+  File.open('data/springahead-2012-may.txt') { |in_file|
     done = false
     in_file.each_line { |line|
       break if done

@@ -48,7 +48,7 @@ result_set.elements.each('rss/channel') do |element|
   break
 end
 
-path = File.expand_path('../yahoo-weather.log', __FILE__)
+path = File.expand_path('../data/yahoo-weather.log', __FILE__)
 today = Time.now.strftime('%Y-%m-%d')
 File.open(path, 'a') { |file|
   out.each { |field, value|

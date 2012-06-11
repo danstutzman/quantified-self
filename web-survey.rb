@@ -8,7 +8,7 @@ class Servlet < WEBrick::HTTPServlet::AbstractServlet
     response.body = File.read(SURVEY_PATH)
   end
   def do_POST(request, response)
-    path = File.expand_path('../web-survey.log', __FILE__)
+    path = File.expand_path('../data/web-survey.log', __FILE__)
     date = Time.now.strftime('%Y-%m-%d')
     File.open(path, 'a') { |file|
       request.query.each { |field, value|

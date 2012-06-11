@@ -9,7 +9,7 @@ hours = sprintf("%.2f", hours)
 
 yesterday = (Time.now - 8 * 60 * 60).strftime('%Y-%m-%d')
 field = 'last-computer-use-hour'
-path = File.expand_path('../last-computer-use.log', __FILE__)
+path = File.expand_path('../data/last-computer-use.log', __FILE__)
 value = hours
 File.open(path, 'a') { |file|
   file.write "#{yesterday},#{field},#{value}\n"
