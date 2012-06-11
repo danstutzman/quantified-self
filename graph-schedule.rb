@@ -21,10 +21,15 @@ def add_interactivity(doc)
   
       function ShowTooltip(evt) {
           // Put tooltip in the right position, change the text and make it visible
-          tooltip.setAttributeNS(null,"x",evt.clientX+10);
-          tooltip.setAttributeNS(null,"y",evt.clientY+30);
-          tooltip.firstChild.data = evt.target.getAttributeNS(null,"mouseovertext");
+          var translateX = evt.clientX + 10;
+          var translateY = evt.clientY;
+          var transform = "translate(" + translateX + "," + translateY + ")";
+          tooltip.setAttributeNS(null, "transform", transform);
+          var text = tooltip.childNodes[1];
+          text.firstChild.data = evt.target.getAttributeNS(null,"mouseovertext");
           tooltip.setAttributeNS(null,"visibility","visible");
+          var rect = tooltip.childNodes[0];
+          rect.setAttributeNS(null, "width", text.getBBox().width);
       }
   
       function HideTooltip(evt) {
@@ -169,11 +174,23 @@ date_to_actions.keys.sort.each { |date|
 }
 
 # add tooltip at the end so it shows on top
-text = doc[0].add_element('text')
+g = doc[0].add_element('g')
+g.attributes['id'] = 'tooltip'
+
+rect = g.add_element('rect')
+rect.attributes['id'] = 'tooltip'
+rect.attributes['x'] = 0
+rect.attributes['y'] = 0
+rect.attributes['width'] = 100
+rect.attributes['height'] = 20
+#rect.attributes['visibility'] = 'hidden'
+rect.attributes['fill'] = 'white'
+#rect.attributes['visibility'] = 'hidden'
+
+text = g.add_element('text')
 text.attributes['id'] = 'tooltip'
 text.attributes['x'] = 0
-text.attributes['y'] = 0
-text.attributes['visibility'] = 'hidden'
+text.attributes['y'] = 20
 text.text = 'Tooltip'
 
 puts doc
