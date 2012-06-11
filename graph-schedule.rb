@@ -8,6 +8,12 @@ Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
 DAYS_SHOWN = 5
 
+def string_to_date(string)
+  match = string.match(/([0-9]{4})-([0-9]{2})-([0-9]{2})/) \
+    or raise "Bad date #{string}"
+  date = Date.new(match[1].to_i, match[2].to_i, match[3].to_i)
+end
+
 def add_interactivity(doc)
   script = doc[0].add_element('script')
   script.attributes['type'] = 'text/ecmascript'
@@ -105,9 +111,7 @@ end
 
 date_to_actions = {}
 Dir.glob('action-log/web-app/*.tsv') { |path|
-  match = path.match(%r{/([0-9]{4})-([0-9]{2})-([0-9]{2}).tsv$})
-  date = Date.new(match[1].to_i, match[2].to_i, match[3].to_i)
-
+  date = string_to_date(path.split('/').last)
   actions = []
   File.open(path) { |file|
     file.each_line { |line|
@@ -141,21 +145,33 @@ date_to_actions.keys.sort.each { |date|
   }
 }
 
+date_to_start_sleep = {}
+date_to_finish_sleep = {}
 CSV.foreach('parse-zeo.log') { |row|
   date, key, value = row
   if key == 'zeo-start-of-night-hour'
-    datetime = Date.new(*ParseDate.parsedate(date)[0...3])
-    day_num = (datetime - min_date).floor
-    start_time = Time.gm(1970, 1, 1).to_i + value.to_f * 3600
-    finish_time = Time.gm(1970, 1, 2).to_i
-    add_rect(doc, day_num, start_time, finish_time, 'sleep', 'sleep')
+    date_to_start_sleep[string_to_date(date)] = value.to_f
   end
   if key == 'zeo-end-of-night-hour'
-    datetime = Date.new(*ParseDate.parsedate(date)[0...3])
-    day_num = (datetime - min_date).floor + 1
-    start_time = Time.gm(1970, 1, 1).to_i
-    finish_time = Time.gm(1970, 1, 1).to_i + (value.to_f - 24) * 3600
+    date_to_finish_sleep[string_to_date(date)] = value.to_f
+  end
+}
+
+(min_date..max_date).each { |date|
+  day_num = (date - min_date).floor
+  start, finish = date_to_start_sleep[date], date_to_finish_sleep[date]
+  midnight_begin = Time.gm(1970, 1, 1).to_i
+  start_time = Time.gm(1970, 1, 1).to_i + start.to_f * 3600
+  midnight_end = Time.gm(1970, 1, 2).to_i
+  finish_time = Time.gm(1970, 1, 1).to_i + (finish.to_f - 24) * 3600
+  if start.nil? || finish.nil?
+  elsif finish < 24 # wake up before midnight
     add_rect(doc, day_num, start_time, finish_time, 'sleep', 'sleep')
+  elsif start < 24 && finish >= 24
+    add_rect(doc, day_num, start_time, midnight_end, 'sleep', 'sleep')
+    add_rect(doc, day_num + 1, midnight_begin, finish_time, 'sleep', 'sleep')
+  elsif start >= 24
+    add_rect(doc, day_num + 1, start_time - 24 * 3600, finish_time, 'sleep', 'sleep')
   end
 }
 
