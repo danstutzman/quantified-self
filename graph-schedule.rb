@@ -2,6 +2,7 @@
 require 'rexml/document'
 require 'parsedate'
 require 'csv'
+require 'date'
 
 Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
@@ -66,7 +67,7 @@ def add_y_axis(doc, num_days)
   }
 end
 
-def add_rect(doc, day_num, start_time, finish_time, category, comments)
+def add_rect(doc, day_num, start_time, finish_time, category, tooltip)
   y0 = start_time.to_f / (60 * 60) * Y_SPACE_PER_HOUR
   y1 = finish_time.to_f / (60 * 60) * Y_SPACE_PER_HOUR
 
@@ -87,62 +88,74 @@ def add_rect(doc, day_num, start_time, finish_time, category, comments)
   rect.attributes['style'] = "stroke:black;fill:#{color};"
   rect.attributes['onmousemove'] = "ShowTooltip(evt)"
   rect.attributes['onmouseout'] = "HideTooltip(evt)"
-  rect.attributes['mouseovertext'] = comments
+  rect.attributes['mouseovertext'] = tooltip
 end
 
-dates = {}
-CSV.foreach('day-retrospective/logs.csv') { |row|
-  next if row[0].match(/^What /)
-  next if row[0] == 'Date' # column headers
-  date, start, finish, category, comment = row
-  datetime = Time.gm(*ParseDate.parsedate(date))
-  dates[datetime] = true
-}
-num_days = ((dates.keys.max - dates.keys.min) / (24 * 60 * 60.0)) + 2
+class Action
+  attr_accessor :start, :finish, :category, :comment
+  def initialize(*args)
+    @start, @finish, @category, @comment = args
+  end
+end
 
-doc = REXML::Document.new(
-  '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)"></svg>')
+date_to_actions = {}
+Dir.glob('action-log/web-app/*.tsv') { |path|
+  match = path.match(%r{/([0-9]{4})-([0-9]{2})-([0-9]{2}).tsv$})
+  date = Date.new(match[1].to_i, match[2].to_i, match[3].to_i)
+
+  actions = []
+  File.open(path) { |file|
+    file.each_line { |line|
+      id, start, finish, category, comment = line.strip.split("\t")
+      actions.push Action.new(start, finish, category, comment)
+    }
+  }
+  date_to_actions[date] = actions
+}
+min_date = date_to_actions.keys.min
+max_date = date_to_actions.keys.max
+num_days = (max_date - min_date).ceil + 1
+
+doc = REXML::Document.new('<svg xmlns="http://www.w3.org/2000/svg"
+  version="1.1" onload="init(evt)"></svg>')
 add_interactivity(doc)
 add_x_axis(doc, num_days)
 add_y_axis(doc, num_days)
 
-CSV.foreach('day-retrospective/logs.csv') { |row|
-  next if row[0].match(/^What /)
-  next if row[0] == 'Date' # column headers
-  date, start, finish, category, comment = row
-  start.gsub! /\?$/, ''
-  finish.gsub! /\?$/, ''
-  datetime = Time.gm(*ParseDate.parsedate(date))
-  dates[datetime] = true
-  day_num = (datetime - Time.gm(2012, 5, 26)) / (60 * 60 * 24)
-  _, _, _, h, m, s = ParseDate.parsedate(start)
-  start_time = Time.gm(1970, 1, 1, h, m, s)
-  _, _, _, h, m, s = ParseDate.parsedate(finish)
-  finish_time = Time.gm(1970, 1, 1, h, m, s)
-
-  add_rect(doc, day_num, start_time, finish_time, category, comment)
+date_to_actions.keys.sort.each { |date|
+  actions = date_to_actions[date]
+  actions.each { |action|
+    day_num = (date - min_date)
+    _, _, _, h, m, s = ParseDate.parsedate(action.start)
+    start_time = Time.gm(1970, 1, 1, h, m, s)
+    _, _, _, h, m, s = ParseDate.parsedate(action.finish)
+    finish_time = Time.gm(1970, 1, 1, h, m, s)
+  
+    add_rect(doc, day_num, start_time, finish_time,
+      action.category, "#{action.category} #{action.comment}")
+  }
 }
 
 CSV.foreach('parse-zeo.log') { |row|
   date, key, value = row
   if key == 'zeo-start-of-night-hour'
-    datetime = Time.gm(*ParseDate.parsedate(date))
-    day_num = (datetime - Time.gm(2012, 5, 26)) / (60 * 60 * 24)
+    datetime = Date.new(*ParseDate.parsedate(date)[0...3])
+    day_num = (datetime - min_date).floor
     start_time = Time.gm(1970, 1, 1).to_i + value.to_f * 3600
     finish_time = Time.gm(1970, 1, 2).to_i
     add_rect(doc, day_num, start_time, finish_time, 'sleep', 'sleep')
   end
   if key == 'zeo-end-of-night-hour'
-    datetime = Time.gm(*ParseDate.parsedate(date))
-    day_num = (datetime - Time.gm(2012, 5, 26)) / (60 * 60 * 24) + 1
+    datetime = Date.new(*ParseDate.parsedate(date)[0...3])
+    day_num = (datetime - min_date).floor + 1
     start_time = Time.gm(1970, 1, 1).to_i
     finish_time = Time.gm(1970, 1, 1).to_i + (value.to_f - 24) * 3600
     add_rect(doc, day_num, start_time, finish_time, 'sleep', 'sleep')
   end
 }
 
-dates.keys.sort.each { |datetime|
-  day_num = (datetime - Time.gm(2012, 5, 26)) / (60 * 60 * 24)
+date_to_actions.keys.sort.each { |date|
+  day_num = (date - min_date).floor
 
   g = doc[0].add_element('g')
   x = day_num * X_SPACE_PER_DAY
@@ -150,7 +163,7 @@ dates.keys.sort.each { |datetime|
   g.attributes['transform'] = "translate(#{x + 0.5}, #{midnight})"
   text = g.add_element('text')
   text.attributes['transform'] = 'rotate(90)'
-  text.text = datetime.strftime('%Y-%m-%d')
+  text.text = date.strftime('%Y-%m-%d')
   text.attributes['x'] =  5 # displaces by y because of the transform
   text.attributes['y'] = -5 # displaces by x because of the transform
 }
