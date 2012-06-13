@@ -70,6 +70,7 @@
         return true;
       }
   %body
+    = styled_flash
     %table
       %tr
         %th Num
@@ -81,33 +82,33 @@
         %form(method='post' onsubmit='formSubmit()')
           %tr{class: (num % 2 == 0) ? 'even' : 'odd'}
             %td.num
-              =row[0]
-              %input{type: 'hidden', name: 'id', value: row[0]}
+              = row.id
+              %input{type: 'hidden', name: 'id', value: row.id}
             %td
-              - hm = (!@am_in_activity && row[1] == '') ?         |
-                Time.now.strftime('%H:%M') : no_seconds(row[1])   |
+              - hm = (!@am_in_activity && row == @rows.last && row.start_time == '') ?         |
+                Time.now.strftime('%H:%M') : no_seconds(row.start_time)   |
               %input.time{type: 'text', name: 'start_time', id: "start_time#{num}",
                           value: hm, size: 5,
                           onfocus:'dofocus(this)', onblur: 'doblur(this)'}
-              - hms = (!@am_in_activity && row[1] == '') ?     |
-                Time.now.strftime('%H:%M:%S') : row[1]         |
+              - hms = (!@am_in_activity && row == @rows.last && row.start_time == '') ?     |
+                Time.now.strftime('%H:%M:%S') : row.start_time         |
               %input{type: 'hidden', name: 'start_time_seconds', value: hms}
             %td
-              - hm = (@am_in_activity && row[2] == '') ?          |
-                Time.now.strftime('%H:%M') : no_seconds(row[2])   |
+              - hm = (@am_in_activity && row.finish_time == '') ?          |
+                Time.now.strftime('%H:%M') : no_seconds(row.finish_time)   |
               %input.time{type: 'text', name: 'finish_time', id: "finish_time#{num}",
                           value: hm, size: 5,
                           onfocus:'dofocus(this)', onblur: 'doblur(this)'}
-              - hms = (@am_in_activity && row[2] == '') ?      |
-                Time.now.strftime('%H:%M:%S') : row[2]         |
+              - hms = (@am_in_activity && row.finish_time == '') ?      |
+                Time.now.strftime('%H:%M:%S') : row.finish_time         |
               %input{type: 'hidden', name: 'finish_time_seconds', value: hms}
             %td
               %input.text{type: 'text', name: 'category', id: "category#{num}",
-                          value: row[3], size: 20,
+                          value: row.category, size: 20,
                           onfocus:'dofocus(this)', onblur: 'doblur(this)'}
             %td
               %input.text{type: 'text', name: 'notes', id: "notes#{num}",
-                          value: row[4], size: 30,
+                          value: row.notes, size: 30,
                           onfocus:'dofocus(this)', onblur: 'doblur(this)'}
             %td
               %input.submit{type: 'submit'}
