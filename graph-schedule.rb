@@ -7,8 +7,8 @@ require 'date'
 Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
 DAYS_SHOWN = 5
-DATA_PATH = File.expand_path('../data', __FILE__)
-ZEO_PATH = "#{DATA_PATH}/parse-zeo.log"
+DATA_PATH = File.expand_path('../data/actions.sqlite3', __FILE__)
+ZEO_PATH = File.expand_path('../data/parse-zeo.log', __FILE__)
 
 def string_to_date(string)
   match = string.match(/([0-9]{4})-([0-9]{2})-([0-9]{2})/) \
@@ -112,16 +112,16 @@ class Action
 end
 
 date_to_actions = {}
-Dir.glob('action-log/web-app/*.tsv') { |path|
-  date = string_to_date(path.split('/').last)
-  actions = []
-  File.open(path) { |file|
-    file.each_line { |line|
-      id, start, finish, category, comment = line.strip.split("\t")
-      actions.push Action.new(start, finish, category, comment)
-    }
-  }
-  date_to_actions[date] = actions
+sqlite_out = `echo 'select * from actions;' | sqlite3 data/actions.sqlite3`
+sqlite_out.split("\n").each { |line|
+  id, date_string, start, finish, category, comment = line.strip.split('|')
+  date = string_to_date(date_string)
+
+  action = Action.new(start, finish, category, comment)
+  if date_to_actions[date].nil?
+    date_to_actions[date] = []
+  end
+  date_to_actions[date].push action
 }
 min_date = date_to_actions.keys.min
 max_date = date_to_actions.keys.max
