@@ -61,7 +61,7 @@ end
 get '/:date' do |date|
   raise "Bad date #{date}" if !date.match(/^[0-9-]+$/)
   @rows = Action.all(:the_date => date, :order => [:the_date, :start_time])
-  @am_in_activity = @rows.size > 0 && @rows.last.finish_time == ''
+  @am_in_activity = @rows.size > 0 && @rows.last.finish_time.nil?
   if !@am_in_activity
     @rows.push Action.new(:id => (Action.max(:id) || 0) + 1)
   end
