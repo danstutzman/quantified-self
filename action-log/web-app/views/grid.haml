@@ -39,6 +39,13 @@
           window.scrollTo(0, 99999);
         }, 500);
       });
+      document.addEventListener('keyup', function(e) {
+        if (e.keyCode == 27) { // Escape key
+          if (window.ActionLogController) {
+            window.ActionLogController.hideWindow();
+          }
+        }
+      });
       function dofocus(element) {
         element.rememberedValue = element.value;
       }
