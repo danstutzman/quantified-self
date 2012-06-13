@@ -16,5 +16,7 @@
 @property (assign) ActionLogController *viewController;
 
 - (void)closeThing;
+- (void)didBecomeActive:(id)sender;
+- (void)didBecomeInactive:(id)sender;
 
 @end

@@ -15,6 +15,8 @@
 @synthesize window = _window;
 @synthesize viewController = _viewController;
 
+BOOL doesWindowHaveFocus = NO;
+
 - (void)dealloc
 {
     [super dealloc];
@@ -25,7 +27,7 @@ static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler,EventRef theEven
 {
     AppDelegate* me = (AppDelegate*)userData;
     
-    if ([me.window isVisible]) { 
+    if ([me.window isVisible] && doesWindowHaveFocus) { 
         [me.window orderOut:me]; 
     } else { 
         [me.window makeKeyAndOrderFront:me]; 
@@ -58,7 +60,22 @@ static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler,EventRef theEven
     RegisterEventHotKey(aKey, controlKey + shiftKey, gMyHotKeyID,
                         GetApplicationEventTarget(), 0, &gMyHotKeyRef);
 
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self 
+        selector:@selector(didBecomeActive:) 
+        name:NSApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self 
+        selector:@selector(didBecomeInactive:) 
+        name:NSApplicationDidResignActiveNotification object:nil];
+}
+
+- (void)didBecomeActive:(id)sender {
+    NSLog(@"didBecomeActive");
+    doesWindowHaveFocus = YES;
+}
+
+- (void)didBecomeInactive:(id)sender {
+    NSLog(@"didBecomeInactive");
+    doesWindowHaveFocus = NO;
 }
 
 -(void)closeThing {
