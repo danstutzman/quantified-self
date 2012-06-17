@@ -2,7 +2,7 @@
   %head
     :javascript
       function myOnLoad() {
-        document.getElementById('went-well').focus();
+        document.getElementById('proud').focus();
       }
   %body(onload='myOnLoad()')
     %form(method='post')
@@ -10,21 +10,33 @@
       %br
       %br
   
-      What went well today?
+      What happened today that you are proud of?
       %br
-      %textarea(id='went-well' name='evening-went-well-text' rows='5' cols='50')
+      %textarea(id='proud' name='evening-proud-text' rows='5' cols='50')
       %br
       %br
 
-      What didn't go well today?
+      Is there any decision today that you would change?
       %br
-      %textarea(id='went-not-well' name='evening-went-not-well-text' rows='5' cols='50')
+      %textarea(id='regret' name='evening-regret-text' rows='5' cols='50')
       %br
       %br
   
       What did you learn today?
       %br
       %textarea(id='learned-today' name='evening-learned-today-text' rows='5' cols='50')
+      %br
+      %br
+  
+      How many non-permanent objects are on your computer desk?
+      %br
+      %input(id='num-desk-objects' name='evening-num-desk-objects')
+      %br
+      %br
+  
+      How many objects are on the table?
+      %br
+      %input(id='num-table-objects' name='evening-num-table-objects')
       %br
       %br
   
