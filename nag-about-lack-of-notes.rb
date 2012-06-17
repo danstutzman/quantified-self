@@ -17,6 +17,6 @@ last_time = Time.local(
   match[1], match[2], match[3]
 )
 seconds_elapsed = Time.new.to_i - last_time.to_i
-if seconds_elapsed > 60 * 60 # if an hour has elapsed
+if seconds_elapsed > 2 * 60 * 60 # if 2 hours have elapsed
   `bash -c '#{script_path} #{last_time.strftime('%l:%M%p')}'`
 end
