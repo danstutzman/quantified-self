@@ -14,6 +14,8 @@
 
 @property (assign) IBOutlet NSWindow *window;
 @property (assign) ActionLogController *viewController;
+@property (assign) IBOutlet NSWindow *alarmWindow;
+@property (assign) NSTimer* alarmTimer;
 
 - (void)closeThing;
 - (void)didBecomeActive:(id)sender;

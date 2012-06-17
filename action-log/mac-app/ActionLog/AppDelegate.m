@@ -14,6 +14,8 @@
 
 @synthesize window = _window;
 @synthesize viewController = _viewController;
+@synthesize alarmWindow = _alarmWindow;
+@synthesize alarmTimer = _alarmTimer;
 
 BOOL doesWindowHaveFocus = NO;
 
@@ -58,13 +60,39 @@ static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEve
         name:NSApplicationDidResignActiveNotification object:nil];
 }
 
+- (void)timerFireMethod:(NSTimer*)theTimer {
+    NSLog(@"timerFireMethod");
+    [self.alarmWindow orderFront:self];
+}
+
+- (void)scheduleAlarms {
+    NSDateComponents *nowComponents = [[NSCalendar currentCalendar] components:NSDayCalendarUnit | NSMonthCalendarUnit | NSYearCalendarUnit fromDate:[NSDate date]];
+    NSDateComponents *thenComponents = [[NSDateComponents alloc] init];
+    thenComponents.year = nowComponents.year;
+    thenComponents.month = nowComponents.month;
+    thenComponents.day = nowComponents.day;
+    thenComponents.hour = 17;
+    thenComponents.minute = 0;
+    thenComponents.second = 0;
+    NSDate* date = [[NSCalendar currentCalendar] dateFromComponents:thenComponents];
+    if ([date compare:[NSDate date]] == NSOrderedAscending) {
+        date = [date dateByAddingTimeInterval:(24 * 60 * 60)];
+    }
+
+    NSTimeInterval everyDay = 24 * 60 * 60;
+    self.alarmTimer = [[NSTimer alloc] initWithFireDate:date interval:everyDay target:self selector:@selector(timerFireMethod:) userInfo:nil repeats:YES];
+    [[NSRunLoop currentRunLoop] addTimer:self.alarmTimer forMode:NSDefaultRunLoopMode];
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     self.viewController = [[ActionLogController alloc] initWithNibName:@"ActionLogController" bundle:nil];
     self.viewController.appDelegate = self;
     self.window.contentView = self.viewController.view;
-
+	[self.alarmWindow setReleasedWhenClosed:FALSE];
+    
     [self registerHotKey];
     [self noticeActiveInactiveChange];
+    [self scheduleAlarms];
 }
 
 - (void)didBecomeActive:(id)sender {
