@@ -80,18 +80,28 @@ def add_y_axis(doc, num_days)
   }
 end
 
-def add_rect(doc, day_num, start_time, finish_time, category, tooltip)
+def add_rect(doc, day_num, start_time, finish_time, action)
   y0 = start_time.to_f / (60 * 60) * Y_SPACE_PER_HOUR
   y1 = finish_time.to_f / (60 * 60) * Y_SPACE_PER_HOUR
 
-  color = case category
-    when /^dev/    then 'blue'
-    when /^body/   then 'red'
-    when /^social/ then 'orange'
+  color = case action.category
+    when 'dev'    then 'blue'
     when 'work'    then 'green'
     when 'sleep'   then 'black'
-    else 'white'
+    else
+      if action.is_social == '1'
+        'yellow'
+      elsif action.is_focused == '1'
+        'blue'
+      elsif action.indicates_distress == '1'
+        'orange'
+      elsif action.is_sensory == '1'
+        'red'
+      else
+       'white'
+      end
   end
+  tooltip = "#{action.category} #{action.comment}"
 
   rect = doc[0].add_element('rect')
   rect.attributes['x'] = day_num * X_SPACE_PER_DAY
@@ -106,18 +116,24 @@ end
 
 class Action
   attr_accessor :start, :finish, :category, :comment
+  attr_accessor :is_social, :is_focused, :indicates_distress, :is_sensory
   def initialize(*args)
-    @start, @finish, @category, @comment = args
+    @start, @finish, @category, @comment,
+      @is_social, @is_focused, @indicates_distress, @is_sensory = args
   end
 end
+SLEEP = Action.new(nil, nil, 'sleep', '', '0', '0')
 
 date_to_actions = {}
-sqlite_out = `echo 'select * from actions;' | sqlite3 data/actions.sqlite3`
+sqlite_out = `echo 'select actions.id, actions.the_date, actions.start_time, actions.finish_time, actions.category, actions.notes, categories.is_social, categories.is_focused, categories.indicates_distress, categories.is_sensory from actions left join categories on categories.category = actions.category;' | sqlite3 data/actions.sqlite3`
 sqlite_out.split("\n").each { |line|
-  id, date_string, start, finish, category, comment = line.strip.split('|')
+  id, date_string, start, finish, category, comment,
+    is_social, is_focused, indicates_distress, is_sensory =
+    line.strip.split('|')
   date = string_to_date(date_string)
 
-  action = Action.new(start, finish, category, comment)
+  action = Action.new(start, finish, category, comment,
+    is_social, is_focused, indicates_distress, is_sensory)
   if date_to_actions[date].nil?
     date_to_actions[date] = []
   end
@@ -142,8 +158,7 @@ date_to_actions.keys.sort.each { |date|
     _, _, _, h, m, s = ParseDate.parsedate(action.finish)
     finish_time = Time.gm(1970, 1, 1, h, m, s)
   
-    add_rect(doc, day_num, start_time, finish_time,
-      action.category, "#{action.category} #{action.comment}")
+    add_rect(doc, day_num, start_time, finish_time, action)
   }
 }
 
@@ -168,12 +183,12 @@ CSV.foreach(ZEO_PATH) { |row|
   finish_time = Time.gm(1970, 1, 1).to_i + (finish.to_f - 24) * 3600
   if start.nil? || finish.nil?
   elsif finish < 24 # wake up before midnight
-    add_rect(doc, day_num, start_time, finish_time, 'sleep', 'sleep')
+    add_rect(doc, day_num, start_time, finish_time, SLEEP)
   elsif start < 24 && finish >= 24
-    add_rect(doc, day_num, start_time, midnight_end, 'sleep', 'sleep')
-    add_rect(doc, day_num + 1, midnight_begin, finish_time, 'sleep', 'sleep')
+    add_rect(doc, day_num, start_time, midnight_end, SLEEP)
+    add_rect(doc, day_num + 1, midnight_begin, finish_time, SLEEP)
   elsif start >= 24
-    add_rect(doc, day_num + 1, start_time - 24 * 3600, finish_time, 'sleep', 'sleep')
+    add_rect(doc, day_num + 1, start_time - 24 * 3600, finish_time, SLEEP)
   end
 }
 
