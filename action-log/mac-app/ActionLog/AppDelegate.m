@@ -17,14 +17,11 @@
 
 BOOL doesWindowHaveFocus = NO;
 
-- (void)dealloc
-{
+- (void)dealloc {
     [super dealloc];
 }
 
-static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler,EventRef theEvent,
-                         void *userData)
-{
+static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
     AppDelegate* me = (AppDelegate*)userData;
     
     if ([me.window isVisible] && doesWindowHaveFocus) { 
@@ -35,17 +32,10 @@ static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler,EventRef theEven
         [((ActionLogController*)me.viewController) loadThePage];
     }
     
-    //Do something once the key is pressed
     return noErr;
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
-    self.viewController = [[ActionLogController alloc] initWithNibName:@"ActionLogController" bundle:nil];
-    self.viewController.appDelegate = self;
-    self.window.contentView = self.viewController.view;
-
-    //Register the Hotkeys
+- (void)registerHotKey {
     EventHotKeyRef gMyHotKeyRef;
     EventHotKeyID gMyHotKeyID;
     EventTypeSpec eventType;
@@ -54,18 +44,27 @@ static OSStatus MyHotKeyHandler(EventHandlerCallRef nextHandler,EventRef theEven
     InstallApplicationEventHandler(&MyHotKeyHandler,1,&eventType,self,NULL);
     gMyHotKeyID.signature='htk1';
     gMyHotKeyID.id=1;
-//    int rightArrowKey = 18;
-    int aKey = 0;
-    // 18 = '1'
+    int aKey = 0; // 0 means the A key
     RegisterEventHotKey(aKey, controlKey + shiftKey, gMyHotKeyID,
-                        GetApplicationEventTarget(), 0, &gMyHotKeyRef);
+        GetApplicationEventTarget(), 0, &gMyHotKeyRef);
+}
 
+- (void)noticeActiveInactiveChange {
     [[NSNotificationCenter defaultCenter] addObserver:self 
         selector:@selector(didBecomeActive:) 
         name:NSApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self 
         selector:@selector(didBecomeInactive:) 
         name:NSApplicationDidResignActiveNotification object:nil];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    self.viewController = [[ActionLogController alloc] initWithNibName:@"ActionLogController" bundle:nil];
+    self.viewController.appDelegate = self;
+    self.window.contentView = self.viewController.view;
+
+    [self registerHotKey];
+    [self noticeActiveInactiveChange];
 }
 
 - (void)didBecomeActive:(id)sender {
