@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'pry'
 require 'json'
+require 'haml'
 
 set :port, 4444
 set :public_folder, 'public'
@@ -9,7 +10,7 @@ set :static_cache_control, [:public, :no_cache]
 log = File.open("time.log", "a")
 
 get '/' do
-  erb :page
+  haml :page
 end
 
 post '/append-log' do
