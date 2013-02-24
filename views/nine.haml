@@ -1,0 +1,35 @@
+%html
+  %head
+    %link(href="stylesheet.css" rel="stylesheet" type="text/css")
+    %script(src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js")
+    %script{ :src => cometio_js }
+
+    %script(src="/json2.js" type="text/javascript")
+  %body
+    %a#unfocus{:href => "#"}
+
+    :javascript
+      var io = new CometIO().connect();
+      console.log('here');
+      io.on("chat", function(value) {
+        console.log('here2');
+      });
+
+    #messages.square.square1
+      %h1 Messages
+    #laundry.square.square2
+      %h1 Laundry
+    #schedule.square.square3
+      %h1 Schedule
+    #weather.square.square4
+      %h1 Weather
+    #food.square.square5
+      %h1 Food
+    #emotion.square.square6
+      %h1 Emotion
+    #task.square.square7
+      %h1 Task
+    #plan.square.square8
+      %h1 Plan
+    #cleaning.square.square9
+      %h1 Cleaning

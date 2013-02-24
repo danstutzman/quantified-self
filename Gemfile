@@ -1,4 +1,14 @@
-source "https://rubygems.org"
-gem "pry-debugger"
-gem "sinatra"
-gem "haml"
+source 'https://rubygems.org'
+gem 'pry-debugger'
+gem 'sinatra'
+gem 'haml'
+gem 'sinatra-cometio'
+gem 'foreman'
+gem 'rack'
+gem 'thin'
+gem 'sinatra-contrib'
+gem 'event_emitter'
+gem 'json'
+gem 'sass'
+gem 'tmail'
+gem 'certified' # fix ssl error

@@ -4,6 +4,7 @@ body {
   background-color: black;
   color: white;
   font-size: 12pt;
+  font-family: sans-serif;
 }
 
 #color-wash {
@@ -55,4 +56,59 @@ body {
   float: left;
   width: 15px;
   height: 30px;
+}
+
+.square {
+  position: absolute;
+  width: 320px;
+  height: 200px;
+  border: 5px #444 solid;
+  text-align: center;
+}
+
+.square1 {
+  top: 10px;
+  left: 10px;
+}
+.square2 {
+  top: 10px;
+  left: 350px;
+}
+.square3 {
+  top: 10px;
+  left: 690px;
+}
+
+.square4 {
+  top: 250px;
+  left: 10px;
+}
+.square5 {
+  top: 250px;
+  left: 350px;
+}
+.square6 {
+  top: 250px;
+  left: 690px;
+}
+
+.square7 {
+  top: 480px;
+  left: 10px;
+}
+.square8 {
+  top: 480px;
+  left: 350px;
+}
+.square9 {
+  top: 480px;
+  left: 690px;
+}
+
+.square h1 {
+  background-color: #000;
+  font-size: 24pt;
+  padding: 0;
+  margin: 0;
+  color: #444;
 }
