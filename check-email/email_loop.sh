@@ -1,10 +1,11 @@
 #!/bin/bash
 
-cd `dirname $0`/..
+cd `dirname $0`
+ruby ./get_email_froms.rb
 while true; do
   echo "Waiting for new email..."
-  bin/idle_until_new_email.rb
-  if [ "$?" == "1" ]; then
-    bin/getmail
+  ./idle_until_new_email.rb
+  if [ "$?" == "2" ]; then
+    ruby ./get_email_froms.rb
   fi
 done

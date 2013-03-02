@@ -10,13 +10,27 @@
 
     :javascript
       var io = new CometIO().connect();
-      console.log('here');
-      io.on("chat", function(value) {
-        console.log('here2');
+      io.on("data", function(hash) {
+        if (hash.section == "messages") {
+          var html = "<ul>";
+          for (var i = 0; i < hash.value.length; i++) {
+            var from_and_count = hash.value[i];
+            var from = from_and_count.from;
+            var count = from_and_count.count;
+            var bold_or_not_open  = from_and_count.seen ? "" : "<b>";
+            var bold_or_not_close = from_and_count.seen ? "" : "</b>";
+            html += "<li>" + bold_or_not_open +
+              from + " " + "(" + count + ")" + bold_or_not_close + "</li>";
+          }
+          html += "</ul>";
+          $('#messages .body').html(html);
+        }
+        //console.log('data', hash);
       });
 
     #messages.square.square1
       %h1 Messages
+      %div.body HERE
     #laundry.square.square2
       %h1 Laundry
     #schedule.square.square3

@@ -63,6 +63,8 @@ body {
   width: 320px;
   height: 200px;
   border: 5px #444 solid;
+}
+.square h1 {
   text-align: center;
 }
 

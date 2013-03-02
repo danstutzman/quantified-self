@@ -1,4 +1,5 @@
 source 'https://rubygems.org'
+
 gem 'pry-debugger'
 gem 'sinatra'
 gem 'haml'
@@ -12,3 +13,6 @@ gem 'json'
 gem 'sass'
 gem 'tmail'
 gem 'certified' # fix ssl error
+
+gem 'activerecord'
+gem 'sqlite3'

@@ -3,12 +3,19 @@ require 'pry'
 require 'json'
 require 'haml'
 require 'sinatra/cometio'
+require 'active_record'
 
-set :port, 4444
+#set :port, 4444
 set :public_folder, 'public'
 set :static_cache_control, [:public, :no_cache]
+set :server, ['thin'] # needed to avoid eventmachine error
 
 log = File.open("time.log", "a")
+
+ActiveRecord::Base.establish_connection(
+  :adapter => 'sqlite3',
+  :database =>  'data.sqlite3'
+)
 
 get '/' do
   haml :page
@@ -36,12 +43,21 @@ get '/9' do
 end
 
 get '/email-arrived' do
-  CometIO.push :chat, :name => 'temperature', :message => Time.now.to_s
+  CometIO.push :data, :name => 'temperature', :message => Time.now.to_s
   "OK"
 end
 
 post '/button-pressed' do
-  CometIO.push :chat, :name => 'temperature', :message => Time.now.to_s
+end
+
+post '/emails-updated' do
+  CometIO.push :data,
+    :section => 'messages',
+    :value => JSON.parse(request.body.read)
   "OK"
 end
 
+post '/hipchat-message-received' do
+  p JSON.parse(request.body.read)
+  "OK"
+end
