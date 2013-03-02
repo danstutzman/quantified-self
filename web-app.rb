@@ -24,6 +24,9 @@ ActiveRecord::Base.logger.formatter = proc { |sev, time, prog, msg| "#{msg}\n" }
 class HipchatMessage < ActiveRecord::Base
 end
 
+class FacebookMessage < ActiveRecord::Base
+end
+
 get '/' do
   haml :page
 end
@@ -61,6 +64,27 @@ post '/emails-updated' do
   CometIO.push :data,
     :section => 'email',
     :value => JSON.parse(request.body.read)
+  "OK"
+end
+
+post '/facebook-messages-updated' do
+  hashes = JSON.parse(request.body.read)
+  for hash in hashes
+    from = hash["from"]
+    timestamp = hash["timestamp"]
+
+    new_message = FacebookMessage.new
+    new_message.from_name = from
+    new_message.save!
+  end
+
+  all_messages = FacebookMessage.all.map do |message|
+    { "from" => message.from_name,
+      "timestamp" => message.created_at }
+  end
+
+  CometIO.push :data, :section => 'facebook', :value => all_messages
+
   "OK"
 end
 

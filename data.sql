@@ -7,3 +7,12 @@ create table if not exists hipchat_messages (
   created_at varchar(250),
   updated_at varchar(250)
 );
+
+--drop table if exists facebook_messages;
+
+create table if not exists facebook_messages (
+  id integer primary key autoincrement,
+  from_name varchar(250),
+  created_at varchar(250),
+  updated_at varchar(250)
+);

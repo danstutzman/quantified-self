@@ -24,6 +24,16 @@
           }
           html += "</ul>";
           $('#email .body').html(html);
+        } else if (hash.section == "facebook") {
+          var html = "<ul>";
+          for (var i = 0; i < hash.value.length; i++) {
+            var from_and_timestamp = hash.value[i];
+            var from = from_and_timestamp.from;
+            var timestamp = from_and_timestamp.timestamp;
+            html += "<li>" + timestamp + ": " + from + "</li>";
+          }
+          html += "</ul>";
+          $('#facebook .body').html(html);
         } else if (hash.section == "hipchat") {
           var html = "<ul>";
           for (var i = 0; i < hash.value.length; i++) {
@@ -44,8 +54,9 @@
     #hipchat.square.square2
       %h1 Hipchat
       %div.body HERE
-    #schedule.square.square3
-      %h1 Schedule
+    #facebook.square.square3
+      %h1 Facebook
+      %div.body HERE
     #weather.square.square4
       %h1 Weather
     #food.square.square5

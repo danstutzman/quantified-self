@@ -5,6 +5,7 @@
 SERVER = 'imap.gmail.com'
 USERNAME = 'dtstutz@gmail.com'
 PW = `cat gmail-password`.chomp
+FOLDER = ARGV[0] or raise "Specify name of folder as first arg (e.g. INBOX)"
 
 require 'net/imap'
 require 'rubygems'
@@ -56,7 +57,7 @@ non_done_handler = Proc.new { |resp|
 # Add handler (before select, so we can catch EXISTS)
 @imap.add_response_handler(non_done_handler)
 begin
-  @imap.select 'INBOX'
+  @imap.select FOLDER
 rescue Net::IMAP::NoResponseError => e
   p e
   exit 0
