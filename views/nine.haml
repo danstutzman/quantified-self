@@ -11,7 +11,7 @@
     :javascript
       var io = new CometIO().connect();
       io.on("data", function(hash) {
-        if (hash.section == "messages") {
+        if (hash.section == "email") {
           var html = "<ul>";
           for (var i = 0; i < hash.value.length; i++) {
             var from_and_count = hash.value[i];
@@ -23,16 +23,27 @@
               from + " " + "(" + count + ")" + bold_or_not_close + "</li>";
           }
           html += "</ul>";
-          $('#messages .body').html(html);
+          $('#email .body').html(html);
+        } else if (hash.section == "hipchat") {
+          var html = "<ul>";
+          for (var i = 0; i < hash.value.length; i++) {
+            var row = hash.value[i];
+            html += "<li>" + row.created_at + ": " + row.sender_nick + ": " +
+              row.message + "</li>";
+          }
+          html += "</ul>";
+          $('#hipchat .body').html(html);
         }
+
         //console.log('data', hash);
       });
 
-    #messages.square.square1
-      %h1 Messages
+    #email.square.square1
+      %h1 Email
       %div.body HERE
-    #laundry.square.square2
-      %h1 Laundry
+    #hipchat.square.square2
+      %h1 Hipchat
+      %div.body HERE
     #schedule.square.square3
       %h1 Schedule
     #weather.square.square4

@@ -4,6 +4,7 @@ require 'json'
 require 'haml'
 require 'sinatra/cometio'
 require 'active_record'
+require 'logger'
 
 #set :port, 4444
 set :public_folder, 'public'
@@ -14,8 +15,14 @@ log = File.open("time.log", "a")
 
 ActiveRecord::Base.establish_connection(
   :adapter => 'sqlite3',
-  :database =>  'data.sqlite3'
+  :database => 'data.sqlite3'
 )
+
+ActiveRecord::Base.logger = Logger.new(STDOUT)
+ActiveRecord::Base.logger.formatter = proc { |sev, time, prog, msg| "#{msg}\n" }
+
+class HipchatMessage < ActiveRecord::Base
+end
 
 get '/' do
   haml :page
@@ -52,12 +59,28 @@ end
 
 post '/emails-updated' do
   CometIO.push :data,
-    :section => 'messages',
+    :section => 'email',
     :value => JSON.parse(request.body.read)
   "OK"
 end
 
 post '/hipchat-message-received' do
-  p JSON.parse(request.body.read)
+  hash = JSON.parse(request.body.read)
+  sender_nick = hash["sender_nick"]
+  message = hash["message"]
+
+  new_message = HipchatMessage.new
+  new_message.sender_nick = sender_nick
+  new_message.message = message
+  new_message.save!
+
+  all_messages = HipchatMessage.all.map do |message|
+    { "created_at" => message.created_at,
+      "sender_nick" => message.sender_nick,
+      "message" => message.message }
+  end
+
+  CometIO.push :data, :section => 'hipchat', :value => all_messages
+
   "OK"
 end
