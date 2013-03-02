@@ -31,14 +31,14 @@ Robut::Connection.configure do |config|
   # Note that the jid must end with /bot if you don't want robut to
   # spam the channel, as described by the last bullet point on this
   # page: https://www.hipchat.com/help/category/xmpp
-  #config.jid = '32928_222063@chat.hipchat.com/bot'
-  config.jid = '32928_251008@chat.hipchat.com/bot'
+  config.jid = '32928_222063@chat.hipchat.com/bot' # Daniel
+  #config.jid = '32928_251008@chat.hipchat.com/bot' # Hipchat Robot
   config.password = File.read('hipchat-password').chomp
-  config.nick = 'Hipchat Robot'
+  config.nick = 'Daniel Stutzman'
+  #config.nick = 'Hipchat Robot'
   config.rooms = [
     '32928_davinci_coders@conf.hipchat.com',
     '32928_progress_updates@conf.hipchat.com',
-    '32928_test@conf.hipchat.com',
     '32928_help!@conf.hipchat.com',
   ]
 
