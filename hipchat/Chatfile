@@ -1,0 +1,56 @@
+require "net/http"
+require "json"
+
+# Require your plugins here
+#require 'robut/plugin/twss'
+require 'robut/plugin/ping'
+require 'robut/storage/yaml_store'
+
+# Add the plugin classes to the Robut plugin list.
+# Plugins are handled in the order that they appear in this array.
+#Robut::Plugin.plugins << Robut::Plugin::TWSS
+#Robut::Plugin.plugins << Robut::Plugin::Ping
+
+class Robut::Plugin::Ping2
+  include Robut::Plugin
+  def handle(time, sender_nick, message)
+    body =
+      { "time" => time, "sender_nick" => sender_nick, "message" => message }
+    p body
+
+    request = Net::HTTP::Post.new("/hipchat-message-received",
+      {'Content-Type' =>'application/json'})
+    request.body = body.to_json
+    Net::HTTP.new("localhost", 4567).request(request)
+  end
+end
+Robut::Plugin.plugins << Robut::Plugin::Ping2
+
+# Configure the robut jabber connection and you're good to go!
+Robut::Connection.configure do |config|
+  # Note that the jid must end with /bot if you don't want robut to
+  # spam the channel, as described by the last bullet point on this
+  # page: https://www.hipchat.com/help/category/xmpp
+  #config.jid = '32928_222063@chat.hipchat.com/bot'
+  config.jid = '32928_251008@chat.hipchat.com/bot'
+  config.password = File.read('hipchat-password').chomp
+  config.nick = 'Hipchat Robot'
+  config.rooms = [
+    '32928_davinci_coders@conf.hipchat.com',
+    '32928_progress_updates@conf.hipchat.com',
+    '32928_test@conf.hipchat.com',
+    '32928_help!@conf.hipchat.com',
+  ]
+
+  # Custom @mention name
+  #config.mention_name = 'Bot'
+
+  # Some plugins require storage
+  #Robut::Storage::YamlStore.file = ".robut"
+  config.store = Robut::Storage::YamlStore
+
+  # Add a logger if you want to debug the connection
+  config.logger = Logger.new(STDOUT)
+end
+
+
