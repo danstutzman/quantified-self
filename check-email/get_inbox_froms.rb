@@ -22,60 +22,37 @@ require 'json'
 
 message_ids = @imap.search(["NOT", "DELETED"])
 
-seen_froms = []
-unseen_froms = []
-FLAGS = "FLAGS"
-FROM_PEEK = "BODY.PEEK[HEADER.FIELDS (From)]"
-FROM = "BODY[HEADER.FIELDS (From)]"
-for message in @imap.fetch(message_ids, [FLAGS, FROM_PEEK])
-  from = message.attr[FROM]
-  match = from.match(/^From: \"?([^<]*?)\"? <([^@]*?)@([^>]*)?>/)
-  from = [match[1], match[2], match[3]]
+messages = []
+if message_ids.size > 0
+  FLAGS = "FLAGS"
+  INTERNALDATE = "INTERNALDATE"
+  UID = "UID"
+  FROM_PEEK = "BODY.PEEK[HEADER.FIELDS (From)]"
+  FROM = "BODY[HEADER.FIELDS (From)]"
+  for imap_message in @imap.fetch(message_ids, [FLAGS, FROM_PEEK, INTERNALDATE, UID])
+    timestamp = imap_message.attr[INTERNALDATE]
+    timestamp = DateTime.strptime(timestamp, '%d-%b-%Y %H:%M:%S %z').to_time.getlocal
+    email_uid = imap_message.attr[UID]
 
-  if message.attr[FLAGS].include?(:Seen)
-    seen_froms.push from
-  else
-    unseen_froms.push from
+    sender = imap_message.attr[FROM]
+    if match = sender.match(/^From: (.*?)[\r\n]*$/)
+      sender = match[1]
+    end
+    was_seen = imap_message.attr[FLAGS].include?(:Seen)
+
+    message = {
+      "sender"      => sender,
+      "was_seen"    => was_seen,
+      "email_uid"   => email_uid,
+      "received_at" => timestamp.strftime('%Y-%m-%dT%H:%M:%S'),
+    }
+    messages.push message
   end
-end
-
-simplify = lambda do |from|
-  full_name, before_domain, domain = from
-  if full_name == 'Thomas Frey'
-    'Tom'
-  elsif full_name
-    full_name.split(" ")[0] # first name
-  else
-    domain
-  end
-end
-seen_froms.map!(&simplify)
-unseen_froms.map!(&simplify)
-
-unseen_from_to_count = Hash.new(0)
-unseen_froms.each do |from|
-  unseen_from_to_count[from] += 1
-end
-#pp unseen_from_to_count
-
-seen_from_to_count = Hash.new(0)
-seen_froms.each do |from|
-  seen_from_to_count[from] += 1
-end
-#pp seen_from_to_count
-
-emails = []
-unseen_from_to_count.each do |from, count|
-  email = { :from => from, :count => count, :seen => false }
-  emails.push email
-end
-seen_from_to_count.each do |from, count|
-  email = { :from => from, :count => count, :seen => true }
-  emails.push email
 end
 
 #curl -d '[{"from":"here","count":3, "seen":false}]' http://localhost:9292/button-pressed
-request = Net::HTTP::Post.new("/emails-updated",
+request = Net::HTTP::Post.new("/unanswered_messages/update_emails",
   {'Content-Type' =>'application/json'})
-request.body = emails.to_json
-Net::HTTP.new("localhost", 4567).request(request)
+request.body = messages.to_json
+puts request.body
+Net::HTTP.new("localhost", 4444).request(request)

@@ -16,3 +16,17 @@ create table if not exists facebook_messages (
   created_at varchar(250),
   updated_at varchar(250)
 );
+
+--drop table if exists unanswered_messages;
+
+create table if not exists unanswered_messages (
+  id          integer primary key autoincrement,
+  email_uid   integer,
+  medium      varchar(250),
+  sender      varchar(250),
+  decision    varchar(250),
+  was_seen    boolean,
+  received_at timestamp,
+  created_at  timestamp,
+  updated_at  timestamp
+);

@@ -58,59 +58,26 @@ body {
   height: 30px;
 }
 
-.square {
-  position: absolute;
-  width: 320px;
-  height: 200px;
+.section {
   border: 5px #444 solid;
+  color: #777;
 }
-.square h1 {
+
+.section h1 {
   text-align: center;
 }
 
-.square1 {
-  top: 10px;
-  left: 10px;
-}
-.square2 {
-  top: 10px;
-  left: 350px;
-}
-.square3 {
-  top: 10px;
-  left: 690px;
+.section th {
+  text-align: left;
+  font-weight: normal;
+  text-decoration: underline;
+  color: #777;
 }
 
-.square4 {
-  top: 250px;
-  left: 10px;
-}
-.square5 {
-  top: 250px;
-  left: 350px;
-}
-.square6 {
-  top: 250px;
-  left: 690px;
+.section td {
+  color: #777;
 }
 
-.square7 {
-  top: 480px;
-  left: 10px;
-}
-.square8 {
-  top: 480px;
-  left: 350px;
-}
-.square9 {
-  top: 480px;
-  left: 690px;
-}
-
-.square h1 {
-  background-color: #000;
-  font-size: 24pt;
-  padding: 0;
-  margin: 0;
-  color: #444;
+.section tr.unseen td {
+  color: #fff;
 }

@@ -5,11 +5,13 @@ require 'haml'
 require 'sinatra/cometio'
 require 'active_record'
 require 'logger'
+require 'pp'
 
-#set :port, 4444
+set :port, 4444
 set :public_folder, 'public'
 set :static_cache_control, [:public, :no_cache]
 set :server, ['thin'] # needed to avoid eventmachine error
+set :haml, { :format => :html5, :escape_html => true, :ugly => true }
 
 log = File.open("time.log", "a")
 
@@ -25,6 +27,21 @@ class HipchatMessage < ActiveRecord::Base
 end
 
 class FacebookMessage < ActiveRecord::Base
+end
+
+class UnansweredMessage < ActiveRecord::Base
+  validates_presence_of :received_at
+  validates_presence_of :sender
+  validates_presence_of :medium
+  validates_presence_of :email_uid, :if => lambda { |m| m.medium == 'email' }
+
+  def age
+    _then = self.received_at
+    now = Time.now
+    today = Time.new(now.year, now.month, now.day) - (7 * 24 * 60 * 60)
+    that_day = Time.new(_then.year, _then.month, _then.day) - (7 * 24 * 60 * 60)
+    ((today.to_f - that_day.to_f) / 86400.0).round.to_i
+  end
 end
 
 get '/' do
@@ -60,10 +77,22 @@ end
 post '/button-pressed' do
 end
 
-post '/emails-updated' do
-  CometIO.push :data,
-    :section => 'email',
-    :value => JSON.parse(request.body.read)
+post '/unanswered_messages/update_emails' do
+  hashes = JSON.parse(request.body.read)
+  uids = [0]
+  hashes.each do |hash|
+    uid = hash["email_uid"]
+    uids.push uid
+    email = UnansweredMessage.find_by_email_uid(uid) ||
+            UnansweredMessage.new({ :email_uid => uid })
+    email.medium = "email"
+    email.sender = hash["sender"]
+    email.was_seen = hash["was_seen"]
+    email.received_at = DateTime.strptime(hash["received_at"], '%Y-%m-%dT%H:%M:%S')
+    email.save!
+  end
+  UnansweredMessage.where("medium = 'email' and email_uid not in (?)", uids).delete_all
+  CometIO.push :update, :section => 'unanswered_messages'
   "OK"
 end
 
@@ -107,4 +136,12 @@ post '/hipchat-message-received' do
   CometIO.push :data, :section => 'hipchat', :value => all_messages
 
   "OK"
+end
+
+get '/unanswered_messages' do
+  haml :_unanswered_messages
+end
+
+after do
+  ActiveRecord::Base.clear_active_connections!
 end
