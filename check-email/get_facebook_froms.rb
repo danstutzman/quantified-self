@@ -18,7 +18,7 @@ require 'json'
 
 @imap.login USERNAME, PW
 
-@imap.select 'Facebook'
+@imap.select 'Records/Facebook'
 
 message_ids = @imap.search(["UNSEEN", "NOT", "DELETED"])
 
@@ -40,5 +40,5 @@ if message_ids.size > 0
   Net::HTTP.new("localhost", 4567).request(request)
   p messages
 else
-  puts "No unseen messages in Facebook."
+  puts "No unseen messages in Records/Facebook."
 end
