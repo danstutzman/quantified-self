@@ -44,7 +44,46 @@ class UnansweredMessage < ActiveRecord::Base
   end
 end
 
-get '/' do
+class Task < ActiveRecord::Base
+  validates_presence_of :name
+end
+
+class TaskBurndownUpdate < ActiveRecord::Base
+  validates_presence_of :hours_left
+end
+
+helpers do
+  def task_burndown_chart
+     # see https://developers.google.com/chart/image/docs/chart_params
+
+     this_morning = Time.new(Time.now.year, Time.now.month, Time.now.day)
+     tomorrow_morning = this_morning.advance(:days => 1)
+     updates = TaskBurndownUpdate.where(
+       'created_at > ? and created_at < ?', this_morning, tomorrow_morning
+       ).order('created_at')
+     updates.push TaskBurndownUpdate.new({
+       :created_at => Time.now,
+       :hours_left => updates.last ? updates.last.hours_left : 1,
+     })
+
+     xs = updates.map { |update|
+       sprintf('%.1f', ((update.created_at - this_morning) / 3600.0))
+     }
+     xs.push xs.last
+     ys = updates.map { |update| update.hours_left }
+     ys.push ys.last
+
+    '<img src="https://chart.googleapis.com/chart?cht=lxy&chs=400x250' +
+    "&chd=t:#{xs.join(',')}|#{ys.join(',')}" +
+    '&chco=3072F3,ff0000,00aaaa&chls=2,4,1&chm=s,ffffff,0,-1,5|s,000000,1,-1,5&chf=bg,s,00000000&chxt=x,y' +
+    '&chds=8,24,0,12' +
+    '&chxr=0,8,24,4|1,0,12,2' +
+    '&chxs=0,aaaaaa,18|1,aaaaaa,18' +
+    '">'
+  end
+end
+
+get '/old' do
   haml :page
 end
 
@@ -65,7 +104,7 @@ get '/self-control' do
   end
 end
 
-get '/9' do
+get '/' do
   haml :nine
 end
 
@@ -140,6 +179,40 @@ end
 
 get '/unanswered_messages' do
   haml :_unanswered_messages
+end
+
+get '/tasks' do
+  haml :_tasks
+end
+
+post '/tasks/edit_task' do
+  if params['delete'] == 'true'
+    task = Task.find(params['task_id'])
+    task.destroy
+  else
+    if params['task_id'] == 'new'
+      task = Task.new
+    else
+      task = Task.find(params['task_id'])
+    end
+    task.priority = params['priority']
+    task.estimate = params['estimate']
+    task.name     = params['name']
+    task.save!
+  end
+
+  TaskBurndownUpdate.new({
+    :created_at => Time.now,
+    :hours_left => Task.all.map { |task| task.estimate }.sum
+  }).save!
+
+  CometIO.push :update, :section => 'tasks'
+
+  redirect "/"
+end
+
+get '/refresh_all' do
+  CometIO.push :update, :section => 'all'
 end
 
 after do

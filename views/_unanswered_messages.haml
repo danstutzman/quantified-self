@@ -1,5 +1,8 @@
 #unanswered-messages.section
-  %h1 Unanswered messages
+  %div(style='float:right')
+    Last update:
+    = Time.now.strftime('%H:%M:%S')
+
   %table
     %tr
       %th age

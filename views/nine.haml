@@ -11,11 +11,46 @@
     :javascript
       var io = new CometIO().connect();
       io.on("update", function(hash) {
-        if (hash.section == "unanswered_messages") {
+        if (hash.section == "unanswered_messages" || hash.section == "all") {
           $.get('/unanswered_messages', null, function (data, textStatus, jqXHR) {
             $('#unanswered-messages').replaceWith(data);
           });
         }
+        if (hash.section == "tasks" || hash.section == "all") {
+          $.get('/tasks', null, function (data, textStatus, jqXHR) {
+            $('#tasks').replaceWith(data);
+          });
+        }
+      });
+
+      $(document).ready(function() {
+        $('#tasks button.edit_task').click(function(event) {
+          var task_id = event.target.value;
+          $('#tasks-popup input.task_id').attr('value', task_id);
+          var row = $('#tasks tr[data_task_id="' + task_id + '"]');
+
+          var estimate = row.find('td.estimate').text();
+          var priority = row.find('td.priority').text();
+          var name     = row.find('td.name').text();
+
+          $('#tasks-popup input.estimate').attr('value', estimate);
+          $('#tasks-popup input.priority').attr('value', priority);
+          $('#tasks-popup input.name'    ).attr('value', name);
+
+          $('#tasks-popup').css('display', 'block');
+        });
+        $('#tasks button.delete_task').click(function(event) {
+          var task_id = event.target.value;
+          $('#tasks-popup input.task_id').attr('value', task_id);
+          $('#tasks-popup input.delete').attr('value', 'true');
+
+          $('#tasks-popup form').submit();
+        });
+        $('#tasks button.new_task').click(function(event) {
+          $('#tasks-popup').css('display', 'block');
+        });
       });
 
     != haml(:_unanswered_messages)
+    %br
+    != haml(:_tasks)

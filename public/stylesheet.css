@@ -6,6 +6,12 @@ body {
   font-size: 12pt;
   font-family: sans-serif;
 }
+th, td {
+  font-size: 16pt;
+}
+tr {
+  vertical-align: top;
+}
 
 #color-wash {
   background-color: black;
@@ -80,4 +86,23 @@ body {
 
 .section tr.unseen td {
   color: #fff;
+}
+
+button {
+  background-color: #333;
+  color: #aaa;
+  border: none;
+}
+
+th.estimate, td.estimate {
+  text-align: right;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+th.priority, td.priority {
+  padding-right: 8px;
+}
+
+#tasks {
+  height: 300px;
 }
