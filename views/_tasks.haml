@@ -4,11 +4,14 @@
     = Time.now.strftime('%H:%M:%S')
     %br
     != task_burndown_chart
+    %br
+    Hours left:
+    = sprintf('%.1f', 22.0 - (Time.now.hour + Time.now.min / 60.0))
 
   %table
     - Task.order('id').each do |task|
       %tr{ :data_task_id => task.id }
-        %td.estimate= task.estimate
+        %td.estimate= task.estimate && sprintf('%.2f', task.estimate)
         %td.priority= task.priority
         %td.name= task.name
         %td
@@ -17,7 +20,7 @@
           %button.delete_task{ :name => 'delete_task_id', :value => task.id } X
     %tr
       %td.estimate(style='border-top:1px gray solid')
-        = Task.all.map { |task| task.estimate }.sum
+        = sprintf('%.2f', Task.all.map { |task| task.estimate || 0.0 }.sum)
       %td.priority
       %td.name
       %td
