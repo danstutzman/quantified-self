@@ -9,17 +9,30 @@
     %a#unfocus{:href => "#"}
 
     :javascript
+      if (typeof console === "undefined") {
+        console = { log: function() {} };
+      }
+
+      function updateSection(section) {
+        console.log('updateSection', section);
+        var url = '/' + section;
+        var jqxhr = $.get(url);
+        jqxhr.done(function (data, textStatus, jqXHR) {
+          console.log('success');
+          $('#' + section).replaceWith(data);
+        });
+        jqxhr.fail(function (data, textStatus, jqXHR) {
+          alert('ajax failure ' + url);
+        });
+      }
+
       var io = new CometIO().connect();
       io.on("update", function(hash) {
         if (hash.section == "unanswered_messages" || hash.section == "all") {
-          $.get('/unanswered_messages', null, function (data, textStatus, jqXHR) {
-            $('#unanswered-messages').replaceWith(data);
-          });
+          updateSection("unanswered_messages");
         }
         if (hash.section == "tasks" || hash.section == "all") {
-          $.get('/tasks', null, function (data, textStatus, jqXHR) {
-            $('#tasks').replaceWith(data);
-          });
+          updateSection("tasks");
         }
       });
 
@@ -50,6 +63,8 @@
           $('#tasks-popup').css('display', 'block');
         });
       });
+
+      setInterval(function() { updateSection("tasks"); }, 5 * 60 * 1000);
 
     != haml(:_unanswered_messages)
     %br
