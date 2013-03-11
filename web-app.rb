@@ -1,5 +1,5 @@
 require 'sinatra'
-require 'pry'
+
 require 'json'
 require 'haml'
 require 'sinatra/cometio'
@@ -12,8 +12,6 @@ set :public_folder, 'public'
 set :static_cache_control, [:public, :no_cache]
 set :server, ['thin'] # needed to avoid eventmachine error
 set :haml, { :format => :html5, :escape_html => true, :ugly => true }
-
-log = File.open("time.log", "a")
 
 ActiveRecord::Base.establish_connection(
   :adapter => 'sqlite3',
@@ -52,6 +50,9 @@ class TaskBurndownUpdate < ActiveRecord::Base
   validates_presence_of :hours_left
 end
 
+class Log < ActiveRecord::Base
+end
+
 helpers do
   def task_burndown_chart
      # see https://developers.google.com/chart/image/docs/chart_params
@@ -67,9 +68,12 @@ helpers do
      })
 
      xs = updates.map { |update|
-       sprintf('%.1f', ((update.created_at - this_morning) / 3600.0))
+       x = (update.created_at - this_morning) / 3600.0
+       x = [8.0, x].max
+       sprintf('%.1f', x)
      }
      xs.push xs.last
+
      ys = updates.map { |update| update.hours_left }
      ys.push ys.last
 
@@ -91,9 +95,27 @@ post '/append-log' do
   unparsed_json = request.body.read
   hash = JSON.parse(unparsed_json)
   puts hash
-  log.puts hash
-  log.flush
-  'OK'
+
+  log = Log.new
+  log.start_date   = hash['startDate']
+  log.finish_date  = hash['finishDate']
+  log.message      = hash['message']
+  log.activity_num = hash['activityNum']
+  log.color        = hash['color']
+  log.save!
+
+  today_midnight = Time.new(Time.now.year, Time.now.month, Time.now.day
+    ).strftime('%Y-%m-%d %H:%M:%S')
+  sql = "select activity_num,
+    sum(strftime('%s', finish_date) - strftime('%s', start_date))
+    from logs
+    group by activity_num;"
+  activity_num_to_seconds = {}
+  ActiveRecord::Base.connection.execute(sql, today_midnight).each do |row|
+    activity_num, seconds = row[0], row[1]
+    activity_num_to_seconds[activity_num] = seconds
+  end
+  JSON::dump(activity_num_to_seconds)
 end
 
 get '/self-control' do

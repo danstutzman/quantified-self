@@ -51,3 +51,15 @@ create table if not exists task_burndown_updates (
 );
 insert into task_burndown_updates (created_at, hours_left) values ('2013-03-05 09:00:00', 10);
 insert into task_burndown_updates (created_at, hours_left) values ('2013-03-05 12:00:00', 5);
+
+--drop table if exists logs;
+
+create table if not exists logs (
+  start_date   timestamp not null,
+  finish_date  timestamp not null,
+  message      varchar(250) not null,
+  activity_num integer,
+  color        varchar(250),
+  created_at   timestamp not null,
+  updated_at   timestamp not null
+);

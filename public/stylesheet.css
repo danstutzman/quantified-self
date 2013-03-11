@@ -16,7 +16,7 @@ tr {
 #color-wash {
   background-color: black;
   width:1024px;
-  height:563px;
+  height:553px;
   color: white;
   text-align: center;
 }
@@ -61,12 +61,13 @@ tr {
   color: white;
   float: left;
   width: 15px;
-  height: 30px;
+  height: 40px;
 }
 
 .section {
-  border: 5px #444 solid;
+  border: 2px #222 solid;
   color: #777;
+  margin: 5px;
 }
 
 .section h1 {

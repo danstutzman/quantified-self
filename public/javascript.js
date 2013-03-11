@@ -1,3 +1,8 @@
+// avoid warnings from early browsers
+if (typeof console === "undefined") {
+  console = { log: function() {} };
+}
+
 var BLUR_INTENTION_TIMEOUT_MILLIS = 6000;
 var AJAX_TIMEOUT_MILLIS = 4000;
 var OVER_TIME_FLASH_RATE_MILLIS = 1000;
@@ -5,15 +10,15 @@ var DEFAULT_INTENDED_DURATION_MINS = 30;
 var NO_ACTIVITY_NUM = -1;
 
 var noActivity = 
-  { color: "#444",    message: "&nbsp;" };
+  { color: "#444",  message: "&nbsp;",        totalTime: "--:--:--" };
 var activities = [
-  { color: "black",   message: "relaxing" },
-  { color: "red",     message: "DaVinci" },
-  { color: "#050",   message: "skating" },
-  { color: "blue",    message: "food/prep" },
-  { color: "#505",  message: "laundry" },
-  { color: "#730",    message: "email" },
-  { color: "#660",  message: "news/blogs" }
+  { color: "blue",  message: "domestic",      totalTime: "--:--:--" },
+  { color: "green", message: "improve",       totalTime: "--:--:--" },
+  { color: "red",   message: "exercise",      totalTime: "--:--:--" },
+  { color: "yellow",message: "estimation",    totalTime: "--:--:--" },
+  { color: "#505",  message: "social online", totalTime: "--:--:--" },
+  { color: "#730",  message: "DVC plan",      totalTime: "--:--:--" },
+  { color: "#660",  message: "DVC next",      totalTime: "--:--:--" }
 ];
 
 var previousActivity = null;
@@ -47,6 +52,26 @@ function ajaxError() {
   document.getElementById('message').innerHTML = 'AJAX Error';
 }
 
+function handleAjaxResponse(response) {
+  console.log('response', response);
+  activityNumToSeconds = JSON.parse(response);
+  for (var activityNum in activityNumToSeconds) {
+    if (activityNumToSeconds.hasOwnProperty(activityNum)) {
+      var seconds = activityNumToSeconds[activityNum];
+      var s = seconds % 60;
+      var m = Math.floor((seconds % 3600) / 60);
+      var h = Math.floor(seconds / 3600);
+      m = (m < 10) ? ("0" + m) : ("" + m);
+      s = (s < 10) ? ("0" + s) : ("" + s);
+      var hms = "" + h + ":" + m + ":" + s;
+      if (activityNum >= 0 && activities[parseInt(activityNum)]) {
+        activities[parseInt(activityNum)].totalTime = hms;
+      }
+    }
+  }
+  setupActivityList();
+}
+
 function postPreviousActivity(activity) {
   activity.startDate = formatTimestamp(activity.startDate);
   activity.finishDate = formatTimestamp(activity.finishDate);
@@ -59,6 +84,7 @@ function postPreviousActivity(activity) {
   request.onreadystatechange = function() {
     if (request.readyState == 4 && request.status == 200) {
       window.clearTimeout(ajaxTimeout);
+      handleAjaxResponse(request.responseText);
     }
   };
   request.send(JSON.stringify(activity));
@@ -163,7 +189,10 @@ function setupActivityList() {
       "style='background-color:" + activity.color + "'>";
     html += i;
     html += "</div>"
-    html += activity.message;
+    html += "<span class='activity-message'>" +
+      activity.message + "</span><br>";
+    html += "<span class='activity-total-time'>" +
+      activity.totalTime + "</span>";
     html += "</div>";
   }
   document.getElementById('activity-list').innerHTML = html;
