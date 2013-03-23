@@ -3,10 +3,22 @@ if (typeof console === "undefined") {
   console = { log: function() {} };
 }
 
+var SPEED_UP_TIME = false;
+var startingTime = new Date();
+function getCurrentDate() {
+  if (SPEED_UP_TIME) {
+    var difference = new Date().getTime() - startingTime.getTime();
+    return new Date(startingTime.getTime() + (difference * 100));
+  } else {
+    return new Date();
+  }
+}
+var WAIT_MINUTE_BETWEEN_UPDATES = (SPEED_UP_TIME) ? 1000 : (60 * 1000)
+
 var BLUR_INTENTION_TIMEOUT_MILLIS = 6000;
 var AJAX_TIMEOUT_MILLIS = 4000;
 var OVER_TIME_FLASH_RATE_MILLIS = 1000;
-var DEFAULT_INTENDED_DURATION_MINS = 30;
+var DEFAULT_INTENDED_DURATION_MINS = (SPEED_UP_TIME) ? 300 : 30;
 var NO_ACTIVITY_NUM = -1;
 
 var noActivity = 
@@ -53,7 +65,7 @@ function ajaxError() {
 }
 
 function handleAjaxResponse(response) {
-  console.log('response', response);
+  //console.log('response', response);
   activityNumToSeconds = JSON.parse(response);
   for (var activityNum in activityNumToSeconds) {
     if (activityNumToSeconds.hasOwnProperty(activityNum)) {
@@ -73,9 +85,11 @@ function handleAjaxResponse(response) {
 }
 
 function postPreviousActivity(activity) {
-  activity.startDate = formatTimestamp(activity.startDate);
-  activity.finishDate = formatTimestamp(activity.finishDate);
-  log(activity);
+  activity.startDateString = formatTimestamp(activity.startDate);
+  activity.finishDateString = formatTimestamp(activity.finishDate);
+  activity.startDateSeconds = activity.startDate.getTime();
+  activity.finishDateSeconds = activity.finishDate.getTime();
+  //log(activity);
 
   ajaxTimeout = window.setTimeout(ajaxError, AJAX_TIMEOUT_MILLIS);
   request = new XMLHttpRequest();
@@ -92,7 +106,7 @@ function postPreviousActivity(activity) {
 
 var minuteUpdateInterval = null;
 
-function changeActivity(activityNum) {
+function changeActivity(activityNum, numMinutesAgo) {
   var oldIntention = document.getElementById('intention').value;
   var oldIntendedDuration = document.getElementById('intended-duration').value;
 
@@ -113,12 +127,15 @@ function changeActivity(activityNum) {
   document.getElementById('intended-duration').value =
     DEFAULT_INTENDED_DURATION_MINS;
 
-  var now = new Date();
+  var now = getCurrentDate();
   if (currentActivity) {
     previousActivity = currentActivity;
     currentActivity = null;
 
-    previousActivity.finishDate = now;
+    var finishDate = (numMinutesAgo > 0) ?
+      new Date(previousActivity.startDate.getTime() +
+        (numMinutesAgo * 60 * 1000)) : now;
+    previousActivity.finishDate = finishDate
     previousActivity.intention = oldIntention;
     previousActivity.intendedDuration = oldIntendedDuration;
 
@@ -126,7 +143,7 @@ function changeActivity(activityNum) {
   }
 
   currentActivity = {
-    startDate: now,
+    startDate: previousActivity ? previousActivity.finishDate : now,
     finishDate: null,
     message: activity.message,
     activityNum: activityNum,
@@ -136,7 +153,8 @@ function changeActivity(activityNum) {
   if (minuteUpdateInterval) {
     window.clearInterval(minuteUpdateInterval);
   }
-  minuteUpdateInterval = window.setInterval(updateDurationSoFar, 60 * 1000);
+  minuteUpdateInterval =
+    window.setInterval(updateDurationSoFar, WAIT_MINUTE_BETWEEN_UPDATES);
   updateDurationSoFar();
 }
 
@@ -163,7 +181,8 @@ function snoozeFlashing() {
 
 function updateDurationSoFar() {
   if (!currentActivity) return;
-  var numMillis = (new Date()) - currentActivity.startDate;
+  var numMillis =
+    getCurrentDate().getTime() - currentActivity.startDate.getTime();
   var numMinutes = Math.floor(numMillis / (60 * 1000));
   document.getElementById('duration-so-far').innerHTML = numMinutes;
 
@@ -278,15 +297,22 @@ function showIntendedDurationBlur() {
     'white';
 }
 
-var DIGIT_0 = 48;
-var DIGIT_9 = 57;
-var SPACE = 32;
+var DIGIT_0 =  48;
+var DIGIT_9 =  57;
+var ENTER   =  13;
+var HYPHEN  = 189;
 function handleDocumentKeydown(e) {
   if (e.keyCode >= DIGIT_0 && e.keyCode <= DIGIT_9) {
     var activityNum = e.keyCode - DIGIT_0;
-    changeActivity(activityNum);
-  } else if (e.keyCode == SPACE) {
-    changeActivity(NO_ACTIVITY_NUM);
+    changeActivity(activityNum, 0);
+  } else if (e.keyCode == ENTER) {
+    changeActivity(NO_ACTIVITY_NUM, 0);
+  } else if (e.keyCode == HYPHEN) {
+    var numMinutesAgo =
+      window.prompt('How many minutes to confirm for this activity?');
+    if (numMinutesAgo === parseInt(numMinutesAgo).toString()) {
+      changeActivity(NO_ACTIVITY_NUM, numMinutesAgo);
+    }
   }
   return true;
 }
@@ -310,7 +336,7 @@ function onloadcalled() {
   document.getElementById('intended-duration').addEventListener(
     'keydown', handleKeydownInIntentionFields, false);
 
-  changeActivity(NO_ACTIVITY_NUM);
+  changeActivity(NO_ACTIVITY_NUM, 0);
 
   setupActivityList();
 

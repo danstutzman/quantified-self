@@ -100,17 +100,19 @@ post '/append-log' do
   puts hash
 
   log = Log.new
-  log.start_date   = hash['startDate']
-  log.finish_date  = hash['finishDate']
-  log.message      = hash['message']
-  log.activity_num = hash['activityNum']
-  log.color        = hash['color']
+  log.start_date           = hash['startDateString']
+  log.finish_date          = hash['finishDateString']
+  log.start_date_seconds   = hash['startDateSeconds']
+  log.finish_date_seconds  = hash['finishDateSeconds']
+  log.message              = hash['message']
+  log.activity_num         = hash['activityNum']
+  log.color                = hash['color']
   log.save!
 
   today_midnight = Time.new(Time.now.year, Time.now.month, Time.now.day
     ).strftime('%Y-%m-%d %H:%M:%S')
   sql = "select activity_num,
-    sum(strftime('%s', finish_date) - strftime('%s', start_date))
+    sum(finish_date_seconds - start_date_seconds)
     from logs
     group by activity_num;"
   activity_num_to_seconds = {}

@@ -55,14 +55,16 @@ insert into task_burndown_updates (created_at, hours_left) values ('2013-03-05 1
 --drop table if exists logs;
 
 create table if not exists logs (
-  id integer primary key autoincrement,
-  start_date   timestamp not null,
-  finish_date  timestamp not null,
-  message      varchar(250) not null,
-  activity_num integer,
-  color        varchar(250),
-  created_at   timestamp not null,
-  updated_at   timestamp not null
+  id integer           primary key autoincrement,
+  start_date           char(19) not null,
+  finish_date          char(19) not null,
+  start_date_seconds   integer not null,
+  finish_date_seconds  integer not null,
+  message              varchar(250) not null,
+  activity_num         integer,
+  color                varchar(250),
+  created_at           timestamp not null,
+  updated_at           timestamp not null
 );
 
 --drop table if exists auto_completions;
