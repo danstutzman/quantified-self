@@ -300,14 +300,15 @@ function showIntendedDurationBlur() {
 var DIGIT_0 =  48;
 var DIGIT_9 =  57;
 var ENTER   =  13;
-var HYPHEN  = 189;
+var HYPHEN1 = 189;
+var HYPHEN2 = 109;
 function handleDocumentKeydown(e) {
   if (e.keyCode >= DIGIT_0 && e.keyCode <= DIGIT_9) {
     var activityNum = e.keyCode - DIGIT_0;
     changeActivity(activityNum, 0);
   } else if (e.keyCode == ENTER) {
     changeActivity(NO_ACTIVITY_NUM, 0);
-  } else if (e.keyCode == HYPHEN) {
+  } else if (e.keyCode == HYPHEN1 || e.keyCode == HYPHEN2) {
     var numMinutesAgo =
       window.prompt('How many minutes to confirm for this activity?');
     if (numMinutesAgo === parseInt(numMinutesAgo).toString()) {
