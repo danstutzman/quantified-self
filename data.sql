@@ -55,6 +55,7 @@ insert into task_burndown_updates (created_at, hours_left) values ('2013-03-05 1
 --drop table if exists logs;
 
 create table if not exists logs (
+  id integer primary key autoincrement,
   start_date   timestamp not null,
   finish_date  timestamp not null,
   message      varchar(250) not null,
