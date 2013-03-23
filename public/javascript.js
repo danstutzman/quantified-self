@@ -205,10 +205,16 @@ function blurIntention() {
 }
 
 var ESCAPE_KEY = 27;
+var BACKSPACE_KEY = 8;
+var DELETE_KEY = 46;
 function handleKeydownInIntentionFields(e) {
-  if (e.keyCode == ESCAPE_KEY) {
+  if (e.keyCode === ESCAPE_KEY) {
     blurIntention();
     return;
+  }
+
+  if (e.keyCode !== BACKSPACE_KEY && e.keyCode !== DELETE_KEY) {
+    window.setTimeout(tryAutoComplete, 1);
   }
 
   // reset blur intention timeout
@@ -222,6 +228,32 @@ function handleKeydownInIntentionFields(e) {
   e.stopPropagation();
 
   return true;
+}
+
+function tryAutoComplete(e) {
+  var text = document.getElementById('intention').value;
+
+  var minLength = 99999;
+  var bestAutoCompletion = null;
+  if (text !== "") {
+    for (var i = 0; i < auto_completions.length; i++) {
+      var autoCompletion = auto_completions[i];
+      if (autoCompletion.indexOf(text) == 0 &&
+          autoCompletion.length < minLength) {
+        minLength = autoCompletion.length;
+        bestAutoCompletion = autoCompletion;
+      }
+    }
+  }
+
+  if (bestAutoCompletion !== null) {
+    var subtracted = bestAutoCompletion.substr(text.length);
+    var box = document.getElementById('intention');
+    var originalLength = box.value.length;
+    box.value += subtracted;
+    box.selectionStart = originalLength;
+    box.selectionEnd = box.value.length;
+  }
 }
 
 function showIntentionFocus() {

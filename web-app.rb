@@ -53,6 +53,9 @@ end
 class Log < ActiveRecord::Base
 end
 
+class AutoCompletion < ActiveRecord::Base
+end
+
 helpers do
   def task_burndown_chart
      # see https://developers.google.com/chart/image/docs/chart_params

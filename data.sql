@@ -63,3 +63,41 @@ create table if not exists logs (
   created_at   timestamp not null,
   updated_at   timestamp not null
 );
+
+--drop table if exists auto_completions;
+
+create table if not exists auto_completions (
+  category varchar(250) not null
+);
+
+insert into auto_completions (category) values ('bedtime');
+insert into auto_completions (category) values ('buy groceries');
+insert into auto_completions (category) values ('call someone');
+insert into auto_completions (category) values ('chat');
+insert into auto_completions (category) values ('clean up');
+insert into auto_completions (category) values ('cook');
+insert into auto_completions (category) values ('dishes');
+insert into auto_completions (category) values ('do laundry');
+insert into auto_completions (category) values ('eat');
+insert into auto_completions (category) values ('email');
+insert into auto_completions (category) values ('facebook');
+insert into auto_completions (category) values ('food');
+insert into auto_completions (category) values ('groceries');
+insert into auto_completions (category) values ('gym');
+insert into auto_completions (category) values ('harmonizers');
+insert into auto_completions (category) values ('hipchat');
+insert into auto_completions (category) values ('laundry');
+insert into auto_completions (category) values ('nap');
+insert into auto_completions (category) values ('o');
+insert into auto_completions (category) values ('phone call');
+insert into auto_completions (category) values ('plan');
+insert into auto_completions (category) values ('plan lesson');
+insert into auto_completions (category) values ('read');
+insert into auto_completions (category) values ('relax');
+insert into auto_completions (category) values ('run');
+insert into auto_completions (category) values ('shower');
+insert into auto_completions (category) values ('snack');
+insert into auto_completions (category) values ('stretch');
+insert into auto_completions (category) values ('walk');
+insert into auto_completions (category) values ('wash dishes');
+insert into auto_completions (category) values ('youtube');
