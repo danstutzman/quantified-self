@@ -105,6 +105,7 @@ post '/append-log' do
   log.start_date_seconds   = hash['startDateSeconds']
   log.finish_date_seconds  = hash['finishDateSeconds']
   log.message              = hash['message']
+  log.intention            = hash['intention']
   log.activity_num         = hash['activityNum']
   log.color                = hash['color']
   log.save!
