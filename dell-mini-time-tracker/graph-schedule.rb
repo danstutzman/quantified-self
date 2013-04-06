@@ -224,7 +224,7 @@ date_to_actions.keys.sort.each { |date|
   g.attributes['transform'] = "translate(#{x + 0.5}, #{midnight})"
   text = g.add_element('text')
   text.attributes['transform'] = 'rotate(90)'
-  text.text = date.strftime('%Y-%m-%d')
+  text.text = date.strftime('%a, %b-%d')
   text.attributes['x'] =  5 # displaces by y because of the transform
   text.attributes['y'] = -5 # displaces by x because of the transform
 }
