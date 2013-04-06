@@ -104,24 +104,22 @@ post '/append-log' do
   log.finish_date          = hash['finishDateString']
   log.start_date_seconds   = hash['startDateSeconds']
   log.finish_date_seconds  = hash['finishDateSeconds']
-  log.message              = hash['message']
   log.intention            = hash['intention']
-  log.activity_num         = hash['activityNum']
-  log.color                = hash['color']
   log.save!
 
-  today_midnight = Time.new(Time.now.year, Time.now.month, Time.now.day
-    ).strftime('%Y-%m-%d %H:%M:%S')
-  sql = "select activity_num,
-    sum(finish_date_seconds - start_date_seconds)
-    from logs
-    group by activity_num;"
-  activity_num_to_seconds = {}
-  ActiveRecord::Base.connection.execute(sql, today_midnight).each do |row|
-    activity_num, seconds = row[0], row[1]
-    activity_num_to_seconds[activity_num] = seconds
-  end
-  JSON::dump(activity_num_to_seconds)
+  #today_midnight = Time.new(Time.now.year, Time.now.month, Time.now.day
+  #  ).strftime('%Y-%m-%d %H:%M:%S')
+  #sql = "select activity_num,
+  #  sum(finish_date_seconds - start_date_seconds)
+  #  from logs
+  #  group by activity_num;"
+  #activity_num_to_seconds = {}
+  #ActiveRecord::Base.connection.execute(sql, today_midnight).each do |row|
+  #  activity_num, seconds = row[0], row[1]
+  #  activity_num_to_seconds[activity_num] = seconds
+  #end
+  #JSON::dump(activity_num_to_seconds)
+  'OK'
 end
 
 get '/self-control' do

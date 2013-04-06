@@ -8,13 +8,12 @@
     %a#unfocus{:href => "#"}
     %form
       #color-wash
-        #message not loaded
+        #message
         #has-intention-or-not
-          %textarea#intention{:placeholder => "Declare an intention..."}
-          %br/
+          %textarea#intention(placeholder='Declare an intention')
+          %br
           %span#duration-so-far 0
           min out of
-          %input#intended-duration{:placeholder => "intended duration",
-            :type => "text"}
+          %input#intended-duration(type='text')
           min
       #activity-list

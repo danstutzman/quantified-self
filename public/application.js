@@ -19,22 +19,12 @@ var BLUR_INTENTION_TIMEOUT_MILLIS = 6000;
 var AJAX_TIMEOUT_MILLIS = 4000;
 var OVER_TIME_FLASH_RATE_MILLIS = 1000;
 var DEFAULT_INTENDED_DURATION_MINS = (SPEED_UP_TIME) ? 300 : 30;
-var NO_ACTIVITY_NUM = -1;
-
-var noActivity = 
-  { color: "#444",  message: "&nbsp;",        totalTime: "--:--:--" };
-var activities = [
-  { color: "blue",  message: "domestic",      totalTime: "--:--:--" },
-  { color: "green", message: "improve",       totalTime: "--:--:--" },
-  { color: "red",   message: "exercise",      totalTime: "--:--:--" },
-  { color: "yellow",message: "estimation",    totalTime: "--:--:--" },
-  { color: "#505",  message: "social online", totalTime: "--:--:--" },
-  { color: "#730",  message: "DVC plan",      totalTime: "--:--:--" },
-  { color: "#660",  message: "DVC next",      totalTime: "--:--:--" }
-];
 
 var previousActivity = null;
-var currentActivity = null;
+var currentActivity = {
+  startDate: getCurrentDate(),
+  finishDate: null
+};
 
 function twoDigits(i) {
   var s = i.toString();
@@ -64,32 +54,12 @@ function ajaxError() {
   document.getElementById('message').innerHTML = 'AJAX Error';
 }
 
-function handleAjaxResponse(response) {
-  //console.log('response', response);
-  activityNumToSeconds = JSON.parse(response);
-  for (var activityNum in activityNumToSeconds) {
-    if (activityNumToSeconds.hasOwnProperty(activityNum)) {
-      var seconds = activityNumToSeconds[activityNum];
-      var s = seconds % 60;
-      var m = Math.floor((seconds % 3600) / 60);
-      var h = Math.floor(seconds / 3600);
-      m = (m < 10) ? ("0" + m) : ("" + m);
-      s = (s < 10) ? ("0" + s) : ("" + s);
-      var hms = "" + h + ":" + m + ":" + s;
-      if (activityNum >= 0 && activities[parseInt(activityNum)]) {
-        activities[parseInt(activityNum)].totalTime = hms;
-      }
-    }
-  }
-  setupActivityList();
-}
-
 function postPreviousActivity(activity) {
   activity.startDateString = formatTimestamp(activity.startDate);
   activity.finishDateString = formatTimestamp(activity.finishDate);
   activity.startDateSeconds = activity.startDate.getTime();
   activity.finishDateSeconds = activity.finishDate.getTime();
-  //log(activity);
+  log(activity);
 
   ajaxTimeout = window.setTimeout(ajaxError, AJAX_TIMEOUT_MILLIS);
   request = new XMLHttpRequest();
@@ -98,7 +68,6 @@ function postPreviousActivity(activity) {
   request.onreadystatechange = function() {
     if (request.readyState == 4 && request.status == 200) {
       window.clearTimeout(ajaxTimeout);
-      handleAjaxResponse(request.responseText);
     }
   };
   request.send(JSON.stringify(activity));
@@ -106,23 +75,12 @@ function postPreviousActivity(activity) {
 
 var minuteUpdateInterval = null;
 
-function changeActivity(activityNum, numMinutesAgo) {
+function changeActivity(numMinutesAgo) {
   var oldIntention = document.getElementById('intention').value;
   var oldIntendedDuration = document.getElementById('intended-duration').value;
 
-  var activity;
-  if (activityNum == NO_ACTIVITY_NUM) {
-    activity = noActivity;
-  } else if (activityNum < activities.length) {
-    activity = activities[activityNum];
-  } else {
-    return; // EARLY EXIT
-  }
-
   snoozeFlashing();
 
-  document.getElementById('color-wash').style.backgroundColor = activity.color;
-  document.getElementById('message').innerHTML = activity.message;
   document.getElementById('intention').value = '';
   document.getElementById('intended-duration').value =
     DEFAULT_INTENDED_DURATION_MINS;
@@ -145,9 +103,6 @@ function changeActivity(activityNum, numMinutesAgo) {
   currentActivity = {
     startDate: previousActivity ? previousActivity.finishDate : now,
     finishDate: null,
-    message: activity.message,
-    activityNum: activityNum,
-    color: activity.color
   };
 
   if (minuteUpdateInterval) {
@@ -161,7 +116,7 @@ function changeActivity(activityNum, numMinutesAgo) {
 function flashForOverTime() {
   var wash = document.getElementById('color-wash');
   if (wash.style.backgroundColor == 'black') {
-    wash.style.backgroundColor = currentActivity.color;
+    wash.style.backgroundColor = 'gray';
   } else {
     wash.style.backgroundColor = 'black';
   }
@@ -174,9 +129,6 @@ function snoozeFlashing() {
   }
   overTimeInterval = null;
   var wash = document.getElementById('color-wash');
-  if (currentActivity) {
-    wash.style.backgroundColor = currentActivity.color;
-  }
 }
 
 function updateDurationSoFar() {
@@ -197,24 +149,6 @@ function updateDurationSoFar() {
         OVER_TIME_FLASH_RATE_MILLIS);
     }
   }
-}
-
-function setupActivityList() {
-  var html = '';
-  for (var i = 0; i < activities.length; i++) {
-    var activity = activities[i];
-    html += "<div class='activity'>";
-    html += "<div class='activity-num' "+
-      "style='background-color:" + activity.color + "'>";
-    html += i;
-    html += "</div>"
-    html += "<span class='activity-message'>" +
-      activity.message + "</span><br>";
-    html += "<span class='activity-total-time'>" +
-      activity.totalTime + "</span>";
-    html += "</div>";
-  }
-  document.getElementById('activity-list').innerHTML = html;
 }
 
 var blurIntentionTimeout = null;
@@ -303,19 +237,21 @@ var ENTER   =  13;
 var HYPHEN1 = 189;
 var HYPHEN2 = 109;
 function handleDocumentKeydown(e) {
-  if (e.keyCode >= DIGIT_0 && e.keyCode <= DIGIT_9) {
-    var activityNum = e.keyCode - DIGIT_0;
-    changeActivity(activityNum, 0);
-  } else if (e.keyCode == ENTER) {
-    changeActivity(NO_ACTIVITY_NUM, 0);
+  if (e.keyCode == ENTER) {
+    changeActivity(0);
+    e.preventDefault();
+    return false;
   } else if (e.keyCode == HYPHEN1 || e.keyCode == HYPHEN2) {
     var numMinutesAgo =
       window.prompt('How many minutes to confirm for this activity?');
     if (numMinutesAgo === parseInt(numMinutesAgo).toString()) {
-      changeActivity(NO_ACTIVITY_NUM, numMinutesAgo);
+      changeActivity(numMinutesAgo);
     }
+    e.preventDefault();
+    return false;
+  } else {
+    return true;
   }
-  return true;
 }
 
 function onloadcalled() {
@@ -336,10 +272,6 @@ function onloadcalled() {
     'focus', handleKeydownInIntentionFields, false);
   document.getElementById('intended-duration').addEventListener(
     'keydown', handleKeydownInIntentionFields, false);
-
-  changeActivity(NO_ACTIVITY_NUM, 0);
-
-  setupActivityList();
 
   blurIntention(); // so tab key works consistently
 }

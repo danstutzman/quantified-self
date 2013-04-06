@@ -60,10 +60,7 @@ create table if not exists logs (
   finish_date          char(19) not null,
   start_date_seconds   integer not null,
   finish_date_seconds  integer not null,
-  message              varchar(250) not null,
   intention            varchar(250) not null,
-  activity_num         integer,
-  color                varchar(250),
   created_at           timestamp not null,
   updated_at           timestamp not null
 );
