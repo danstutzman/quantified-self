@@ -53,6 +53,9 @@ end
 class Log < ActiveRecord::Base
 end
 
+class Category < ActiveRecord::Base
+end
+
 class AutoCompletion < ActiveRecord::Base
 end
 
@@ -105,6 +108,7 @@ post '/append-log' do
   log.start_date_seconds   = hash['startDateSeconds']
   log.finish_date_seconds  = hash['finishDateSeconds']
   log.intention            = hash['intention']
+  log.category             = hash['category']
   log.save!
 
   #today_midnight = Time.new(Time.now.year, Time.now.month, Time.now.day

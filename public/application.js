@@ -76,14 +76,16 @@ function postPreviousActivity(activity) {
 var minuteUpdateInterval = null;
 
 function changeActivity(numMinutesAgo) {
-  var oldIntention = document.getElementById('intention').value;
+  var oldIntention        = document.getElementById('intention').value;
   var oldIntendedDuration = document.getElementById('intended-duration').value;
+  var oldCategory         = document.getElementById('category').value;
 
   snoozeFlashing();
 
   document.getElementById('intention').value = '';
   document.getElementById('intended-duration').value =
     DEFAULT_INTENDED_DURATION_MINS;
+  document.getElementById('category').value = '';
 
   var now = getCurrentDate();
   if (currentActivity) {
@@ -96,6 +98,7 @@ function changeActivity(numMinutesAgo) {
     previousActivity.finishDate = finishDate
     previousActivity.intention = oldIntention;
     previousActivity.intendedDuration = oldIntendedDuration;
+    previousActivity.category = oldCategory;
 
     postPreviousActivity(previousActivity);
   }
@@ -153,6 +156,16 @@ function updateDurationSoFar() {
 
 var blurIntentionTimeout = null;
 function blurIntention() {
+  if (document.getElementById('category').value == '') {
+    var intention = document.getElementById('intention').value;
+    for (var i = 0; i < auto_completions.length; i++) {
+      var tuple = auto_completions[i];
+      if (intention == tuple.intention) {
+        document.getElementById('category').value = tuple.category;
+      }
+    }
+  }
+
   // so next time Tab is pressed, it goes to intention
   document.getElementById('unfocus').focus();
 }
@@ -190,7 +203,8 @@ function tryAutoComplete(e) {
   var bestAutoCompletion = null;
   if (text !== "") {
     for (var i = 0; i < auto_completions.length; i++) {
-      var autoCompletion = auto_completions[i];
+      var tuple = auto_completions[i];
+      var autoCompletion = tuple.intention;
       if (autoCompletion.indexOf(text) == 0 &&
           autoCompletion.length < minLength) {
         minLength = autoCompletion.length;
@@ -238,7 +252,12 @@ var HYPHEN1 = 189;
 var HYPHEN2 = 109;
 function handleDocumentKeydown(e) {
   if (e.keyCode == ENTER) {
-    changeActivity(0);
+    if (document.getElementById('category').value == '' &&
+        document.getElementById('intention').value != '') {
+      // refuse to insert record
+    } else {
+      changeActivity(0);
+    }
     e.preventDefault();
     return false;
   } else if (e.keyCode == HYPHEN1 || e.keyCode == HYPHEN2) {

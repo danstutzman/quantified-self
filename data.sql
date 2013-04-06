@@ -61,44 +61,62 @@ create table if not exists logs (
   start_date_seconds   integer not null,
   finish_date_seconds  integer not null,
   intention            varchar(250) not null,
+  category             varchar(250) not null,
   created_at           timestamp not null,
   updated_at           timestamp not null
 );
 
---drop table if exists auto_completions;
+--drop table if exists categories;
 
-create table if not exists auto_completions (
+create table if not exists categories (
   category varchar(250) not null
 );
 
-insert into auto_completions (category) values ('bedtime');
-insert into auto_completions (category) values ('buy groceries');
-insert into auto_completions (category) values ('call someone');
-insert into auto_completions (category) values ('chat');
-insert into auto_completions (category) values ('clean up');
-insert into auto_completions (category) values ('cook');
-insert into auto_completions (category) values ('dishes');
-insert into auto_completions (category) values ('do laundry');
-insert into auto_completions (category) values ('eat');
-insert into auto_completions (category) values ('email');
-insert into auto_completions (category) values ('facebook');
-insert into auto_completions (category) values ('food');
-insert into auto_completions (category) values ('groceries');
-insert into auto_completions (category) values ('gym');
-insert into auto_completions (category) values ('harmonizers');
-insert into auto_completions (category) values ('hipchat');
-insert into auto_completions (category) values ('laundry');
-insert into auto_completions (category) values ('nap');
-insert into auto_completions (category) values ('o');
-insert into auto_completions (category) values ('phone call');
-insert into auto_completions (category) values ('plan');
-insert into auto_completions (category) values ('plan lesson');
-insert into auto_completions (category) values ('read');
-insert into auto_completions (category) values ('relax');
-insert into auto_completions (category) values ('run');
-insert into auto_completions (category) values ('shower');
-insert into auto_completions (category) values ('snack');
-insert into auto_completions (category) values ('stretch');
-insert into auto_completions (category) values ('walk');
-insert into auto_completions (category) values ('wash dishes');
-insert into auto_completions (category) values ('youtube');
+insert into categories (category) values ('real-social');
+insert into categories (category) values ('domestic');
+insert into categories (category) values ('exercise');
+insert into categories (category) values ('improve');
+insert into categories (category) values ('sleep');
+insert into categories (category) values ('virtual-social');
+insert into categories (category) values ('work');
+insert into categories (category) values ('zone-out');
+
+--drop table if exists auto_completions;
+
+create table if not exists auto_completions (
+  category varchar(250) not null,
+  intention varchar(250) not null
+);
+
+insert into auto_completions (category, intention) values ('zone-out',       'bedtime');
+insert into auto_completions (category, intention) values ('domestic',       'buy groceries');
+insert into auto_completions (category, intention) values ('virtual-social', 'call someone');
+insert into auto_completions (category, intention) values ('virtual-social', 'chat');
+insert into auto_completions (category, intention) values ('domestic',       'clean up');
+insert into auto_completions (category, intention) values ('domestic',       'cook');
+insert into auto_completions (category, intention) values ('domestic',       'dishes');
+insert into auto_completions (category, intention) values ('domestic',       'do laundry');
+insert into auto_completions (category, intention) values ('domestic',       'eat');
+insert into auto_completions (category, intention) values ('virtual-social', 'email');
+insert into auto_completions (category, intention) values ('zone-out',       'facebook');
+insert into auto_completions (category, intention) values ('domestic',       'groceries');
+insert into auto_completions (category, intention) values ('exercise',       'gym');
+insert into auto_completions (category, intention) values ('real-social',    'harmonizers');
+insert into auto_completions (category, intention) values ('virtual-social', 'hipchat');
+insert into auto_completions (category, intention) values ('domestic',       'laundry');
+insert into auto_completions (category, intention) values ('sleep',          'nap');
+insert into auto_completions (category, intention) values ('zone-out',       'o');
+insert into auto_completions (category, intention) values ('work',           'onlinerubytutor');
+insert into auto_completions (category, intention) values ('virtual-social', 'phone call');
+insert into auto_completions (category, intention) values ('zone-out',       'read');
+insert into auto_completions (category, intention) values ('zone-out',       'relax');
+insert into auto_completions (category, intention) values ('exercise',       'run');
+insert into auto_completions (category, intention) values ('domestic',       'shower and dress');
+insert into auto_completions (category, intention) values ('sleep',          'sleep');
+insert into auto_completions (category, intention) values ('zone-out',       'snack');
+insert into auto_completions (category, intention) values ('zone-out',       'stretch');
+insert into auto_completions (category, intention) values ('work',           'student-checklist');
+insert into auto_completions (category, intention) values ('work',           'teach class');
+insert into auto_completions (category, intention) values ('zone-out',       'walk');
+insert into auto_completions (category, intention) values ('domestic',       'wash dishes');
+insert into auto_completions (category, intention) values ('zone-out',       'youtube');

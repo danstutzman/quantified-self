@@ -2,7 +2,8 @@
   %head
     %link{:href => "stylesheet.css", :rel => "stylesheet", :type => "text/css"}
     %script{:src => "/json2.js", :type => "text/javascript"}
-    %script!= "var auto_completions = #{AutoCompletion.all.map { |a| a.category }.inspect};"
+    %script
+      != "var auto_completions = #{JSON.dump(AutoCompletion.all.map { |a| { 'category' => a.category, 'intention' => a.intention } })};"
     %script{:src => "/application.js", :type => "text/javascript"}
   %body
     %a#unfocus{:href => "#"}
@@ -16,4 +17,9 @@
           min out of
           %input#intended-duration(type='text')
           min
+          %br
+          %select#category
+            %option
+            - Category.all.each do |category|
+              %option= category.category
       #activity-list
