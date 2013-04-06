@@ -6,7 +6,7 @@ Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
 DAYS_SHOWN = 5
 DATA_PATH = File.expand_path('data.sqlite3', __FILE__)
-ZEO_PATH = File.expand_path('../../data/parse-zeo.log', __FILE__)
+ZEO_PATH = File.expand_path('../../data/zeodata.csv', __FILE__)
 
 def string_to_date(string)
   match = string.match(/([0-9]{4})-([0-9]{2})-([0-9]{2})/) \
@@ -75,6 +75,10 @@ def add_rect(doc, day_num, start_time, finish_time, action)
     when 'domestic'       then 'pink'
     when 'work'           then 'green'
     when 'sleep'          then 'black'
+    when 'zeo1'           then '#420' # orange = wake
+    when 'zeo2'           then '#040' # light green=rem
+    when 'zeo3'           then '#222' # gray=light
+    when 'zeo4'           then '#020' # dark green=deep
     when 'improve'        then 'yellow'
     when 'zone-out'       then 'gray'
     when 'virtual-social' then 'blue'
@@ -89,7 +93,8 @@ def add_rect(doc, day_num, start_time, finish_time, action)
   rect.attributes['width'] = X_SPACE_PER_DAY * 0.8
   rect.attributes['y'] = y0
   rect.attributes['height'] = y1 - y0
-  rect.attributes['style'] = "stroke:black;fill:#{color};"
+  #rect.attributes['style'] = "stroke:black;fill:#{color};"
+  rect.attributes['style'] = "fill:#{color};"
   tooltip_element = rect.add_element('title')
   tooltip_element.text = tooltip
 end
@@ -100,7 +105,6 @@ class Action
     @start, @finish, @category, @comment = args
   end
 end
-SLEEP = Action.new(nil, nil, 'sleep', '')
 
 date_to_actions = {}
 sqlite_out = `echo "select id, start_date, finish_date, category, intention from logs where intention != '';" | sqlite3 data.sqlite3`
@@ -144,35 +148,72 @@ date_to_actions.keys.sort.each { |date|
   }
 }
 
-date_to_start_sleep = {}
-date_to_finish_sleep = {}
-CSV.foreach(ZEO_PATH) { |row|
-  date, key, value = row
-  if key == 'zeo-start-of-night-hour'
-    date_to_start_sleep[string_to_date(date)] = value.to_f
+def parsedate(string)
+  if match = string.match(/^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/)
+    [match[3].to_i, match[1].to_i, match[2].to_i, 0, 0, 0]
+  elsif match = string.match(/^([0-9]{2})\/([0-9]{2})\/([0-9]{4}) ([0-9]{2}):([0-9]{2})$/)
+    [match[3].to_i, match[1].to_i, match[2].to_i, match[4].to_i, match[5].to_i, 0]
+  else
+    raise "Can't parse date #{string}"
   end
-  if key == 'zeo-end-of-night-hour'
-    date_to_finish_sleep[string_to_date(date)] = value.to_f
-  end
-}
+end
 
-(min_date..max_date).each { |date|
-  day_num = (date - min_date).floor
-  start, finish = date_to_start_sleep[date], date_to_finish_sleep[date]
-  midnight_begin = Time.gm(1970, 1, 1).to_i
-  start_time = Time.gm(1970, 1, 1).to_i + start.to_f * 3600
-  midnight_end = Time.gm(1970, 1, 2).to_i
-  finish_time = Time.gm(1970, 1, 1).to_i + (finish.to_f - 24) * 3600
-  if start.nil? || finish.nil?
-  elsif finish < 24 # wake up before midnight
-    add_rect(doc, day_num, start_time, finish_time, SLEEP)
-  elsif start < 24 && finish >= 24
-    add_rect(doc, day_num, start_time, midnight_end, SLEEP)
-    add_rect(doc, day_num + 1, midnight_begin, finish_time, SLEEP)
-  elsif start >= 24
-    add_rect(doc, day_num + 1, start_time - 24 * 3600, finish_time, SLEEP)
+File.open(ZEO_PATH) do |in_file|
+  headers = in_file.readline.split(',')
+  headers.reject! { |header| header.match(/^SS/) }
+  in_file.each_line do |line|
+    values = line.split(',')
+    y, m, d = parsedate(values[headers.index('Sleep Date')])
+    date = Time.local(y, m, d)
+    next if date.year < 2012
+    #start = parsedate(values[9])
+    #start_time = Time.gm(1970, 1, 1, start[3], start[4], start[5])
+    finish = parsedate(values[11])
+    finish_time = Time.gm(1970, 1, 2, finish[3], finish[4], finish[5])
+
+    day_num = (Date.new(y, m, d) - min_date).to_i
+    #action = Action.new(start_time, finish_time, 'zeo', 'zeo')
+    #if start_time < finish_time
+    #  add_rect(doc, day_num, start_time, finish_time, action)
+    #else
+    #  new_finish_time = Time.gm(1970, 1, 1, 23, 59, 59)
+    #  add_rect(doc, day_num, start_time, new_finish_time, action)
+    #
+    #  new_start_time = Time.gm(1970, 1, 1, 0, 0, 0)
+    #  add_rect(doc, day_num + 1, new_start_time, finish_time, action)
+    #end
+
+
+    # 74 is by 5 mins
+    # 75 is by 30 seconds
+    # 0 undefined, 1 - Wake, 2 - REM, 3 - Light, 4 - Deep
+
+    blocks = values[74].split(' ').map { |i| i.to_i }
+    # remove final 0 elements (sleep_type = undefined)
+    while blocks.size > 0 && blocks.last == 0
+      blocks.pop
+    end
+
+    start_time = finish_time - (blocks.size * 5 * 60)
+    blocks.each_with_index do |sleep_type, i|
+      new_start_time = start_time + (i * 5 * 60)
+      new_finish_time = new_start_time + (1 * 5 * 60)
+      if sleep_type != 0 # don't log undefined
+        if new_start_time.day == 2 # wrapped over to Jan 2
+          new_start_time -= (60 * 60 * 24)
+          new_finish_time -= (60 * 60 * 24)
+          action = Action.new(
+            new_start_time, new_finish_time, "zeo#{sleep_type}", 'zeo')
+          add_rect(doc, day_num + 1, new_start_time, new_finish_time, action)
+        else
+          action = Action.new(
+            new_start_time, new_finish_time, "zeo#{sleep_type}", 'zeo')
+          add_rect(doc, day_num, new_start_time, new_finish_time, action)
+        end
+      end
+    end
   end
-}
+end
 
 date_to_actions.keys.sort.each { |date|
   day_num = (date - min_date).floor
