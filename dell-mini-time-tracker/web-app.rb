@@ -97,6 +97,11 @@ get '/old' do
   haml :page
 end
 
+get '/graph' do
+  `ruby graph-schedule.rb > out.svg`
+  send_file('out.svg')
+end
+
 post '/append-log' do
   unparsed_json = request.body.read
   hash = JSON.parse(unparsed_json)
@@ -243,6 +248,15 @@ end
 
 get '/refresh_all' do
   CometIO.push :update, :section => 'all'
+end
+
+Rack::Utils.key_space_limit = 123456789
+post '/post_zeo_data' do
+  data = request.body.read
+  File.open('../data/zeodata.csv', 'w') do |file|
+    file.write(data.gsub('%0D%0A', "\r\n"))
+  end
+  "OK\n"
 end
 
 after do
