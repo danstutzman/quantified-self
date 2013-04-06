@@ -78,7 +78,7 @@ def add_rect(doc, day_num, start_time, finish_time, action)
     when 'zeo1'           then '#420' # orange = wake
     when 'zeo2'           then '#040' # light green=rem
     when 'zeo3'           then '#222' # gray=light
-    when 'zeo4'           then '#020' # dark green=deep
+    when 'zeo4'           then '#006' # dark green=deep, change to blue
     when 'improve'        then 'yellow'
     when 'zone-out'       then 'gray'
     when 'virtual-social' then 'blue'
