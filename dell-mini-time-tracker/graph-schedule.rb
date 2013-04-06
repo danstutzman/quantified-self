@@ -1,14 +1,12 @@
-#!/usr/bin/env ruby
 require 'rexml/document'
-require 'parsedate'
 require 'csv'
 require 'date'
 
 Y_SPACE_PER_HOUR = 30
 X_SPACE_PER_DAY = 60
 DAYS_SHOWN = 5
-DATA_PATH = File.expand_path('../data/actions.sqlite3', __FILE__)
-ZEO_PATH = File.expand_path('../data/parse-zeo.log', __FILE__)
+DATA_PATH = File.expand_path('data.sqlite3', __FILE__)
+ZEO_PATH = File.expand_path('../../data/parse-zeo.log', __FILE__)
 
 def string_to_date(string)
   match = string.match(/([0-9]{4})-([0-9]{2})-([0-9]{2})/) \
@@ -16,34 +14,23 @@ def string_to_date(string)
   date = Date.new(match[1].to_i, match[2].to_i, match[3].to_i)
 end
 
-def add_interactivity(doc)
-  script = doc[0].add_element('script')
-  script.attributes['type'] = 'text/ecmascript'
-  script.text = '
-      function init(evt) {
-          if ( window.svgDocument == null ) {
-              svgDocument = evt.target.ownerDocument;
-          }
-          tooltip = svgDocument.getElementById("tooltip");
-      }
-  
-      function ShowTooltip(evt) {
-          // Put tooltip in the right position, change the text and make it visible
-          var translateX = evt.clientX + 10;
-          var translateY = evt.clientY;
-          var transform = "translate(" + translateX + "," + translateY + ")";
-          tooltip.setAttributeNS(null, "transform", transform);
-          var text = tooltip.childNodes[1];
-          text.firstChild.data = evt.target.getAttributeNS(null,"mouseovertext");
-          tooltip.setAttributeNS(null,"visibility","visible");
-          var rect = tooltip.childNodes[0];
-          rect.setAttributeNS(null, "width", text.getBBox().width);
-      }
-  
-      function HideTooltip(evt) {
-          tooltip.setAttributeNS(null,"visibility","hidden");
-      }
-  '
+def datetime_to_date(string)
+  match = string.match(
+    /([0-9]{4})-([0-9]{2})-([0-9]{2}) [0-9]{2}:[0-9]{2}:[0-9]{2}/) \
+    or raise "Bad datetime #{string}"
+  date = Date.new(match[1].to_i, match[2].to_i, match[3].to_i)
+end
+
+def datetime_to_hms(date, datetime)
+  match = datetime.match(
+    /([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})/) \
+    or raise "Bad datetime #{string}"
+  #if match[1].to_i != date.year ||
+  #   match[2].to_i != date.month ||
+  #   match[3].to_i != date.day
+  #  raise "Datetime doesn't match date: #{[datetime, date].inspect}"
+  #end
+  [match[4].to_i, match[5].to_i, match[6].to_i]
 end
 
 def add_x_axis(doc, num_days)
@@ -85,23 +72,17 @@ def add_rect(doc, day_num, start_time, finish_time, action)
   y1 = finish_time.to_f / (60 * 60) * Y_SPACE_PER_HOUR
 
   color = case action.category
-    when 'dev'    then 'blue'
-    when 'work'    then 'green'
-    when 'sleep'   then 'black'
-    else
-      if action.is_social == '1'
-        'yellow'
-      elsif action.is_focused == '1'
-        'blue'
-      elsif action.indicates_distress == '1'
-        'orange'
-      elsif action.is_sensory == '1'
-        'red'
-      else
-       'white'
-      end
+    when 'domestic'       then 'pink'
+    when 'work'           then 'green'
+    when 'sleep'          then 'black'
+    when 'improve'        then 'yellow'
+    when 'zone-out'       then 'gray'
+    when 'virtual-social' then 'blue'
+    when 'real-social'    then 'orange'
+    when 'exercise'       then 'red'
+    else 'white'
   end
-  tooltip = "#{action.category} #{action.comment}"
+  tooltip = action.comment
 
   rect = doc[0].add_element('rect')
   rect.attributes['x'] = day_num * X_SPACE_PER_DAY
@@ -109,31 +90,25 @@ def add_rect(doc, day_num, start_time, finish_time, action)
   rect.attributes['y'] = y0
   rect.attributes['height'] = y1 - y0
   rect.attributes['style'] = "stroke:black;fill:#{color};"
-  rect.attributes['onmousemove'] = "ShowTooltip(evt)"
-  rect.attributes['onmouseout'] = "HideTooltip(evt)"
-  rect.attributes['mouseovertext'] = tooltip
+  tooltip_element = rect.add_element('title')
+  tooltip_element.text = tooltip
 end
 
 class Action
   attr_accessor :start, :finish, :category, :comment
-  attr_accessor :is_social, :is_focused, :indicates_distress, :is_sensory
   def initialize(*args)
-    @start, @finish, @category, @comment,
-      @is_social, @is_focused, @indicates_distress, @is_sensory = args
+    @start, @finish, @category, @comment = args
   end
 end
-SLEEP = Action.new(nil, nil, 'sleep', '', '0', '0')
+SLEEP = Action.new(nil, nil, 'sleep', '')
 
 date_to_actions = {}
-sqlite_out = `echo 'select actions.id, actions.the_date, actions.start_time, actions.finish_time, actions.category, actions.notes, categories.is_social, categories.is_focused, categories.indicates_distress, categories.is_sensory from actions left join categories on categories.category = actions.category;' | sqlite3 data/actions.sqlite3`
+sqlite_out = `echo "select id, start_date, finish_date, category, intention from logs where intention != '';" | sqlite3 data.sqlite3`
 sqlite_out.split("\n").each { |line|
-  id, date_string, start, finish, category, comment,
-    is_social, is_focused, indicates_distress, is_sensory =
-    line.strip.split('|')
-  date = string_to_date(date_string)
+  id, start, finish, category, comment = line.strip.split('|')
+  date = datetime_to_date(start)
 
-  action = Action.new(start, finish, category, comment,
-    is_social, is_focused, indicates_distress, is_sensory)
+  action = Action.new(start, finish, category, comment)
   if date_to_actions[date].nil?
     date_to_actions[date] = []
   end
@@ -144,21 +119,28 @@ max_date = date_to_actions.keys.max
 num_days = (max_date - min_date).ceil + 1
 
 doc = REXML::Document.new('<svg xmlns="http://www.w3.org/2000/svg"
-  version="1.1" onload="init(evt)"></svg>')
-add_interactivity(doc)
+  version="1.1"></svg>')
 add_x_axis(doc, num_days)
 add_y_axis(doc, num_days)
 
 date_to_actions.keys.sort.each { |date|
   actions = date_to_actions[date]
   actions.each { |action|
-    day_num = (date - min_date)
-    _, _, _, h, m, s = ParseDate.parsedate(action.start)
+    day_num = (date - min_date).to_i
+    h, m, s = datetime_to_hms(date, action.start)
     start_time = Time.gm(1970, 1, 1, h, m, s)
-    _, _, _, h, m, s = ParseDate.parsedate(action.finish)
+    h, m, s = datetime_to_hms(date, action.finish)
     finish_time = Time.gm(1970, 1, 1, h, m, s)
-  
-    add_rect(doc, day_num, start_time, finish_time, action)
+
+    if finish_time < start_time
+      new_finish_time = Time.gm(1970, 1, 1, 23, 59, 59)
+      add_rect(doc, day_num, start_time, new_finish_time, action)
+
+      new_start_time = Time.gm(1970, 1, 1, 0, 0, 0)
+      add_rect(doc, day_num + 1, new_start_time, finish_time, action)
+    else
+      add_rect(doc, day_num, start_time, finish_time, action)
+    end
   }
 }
 
@@ -225,4 +207,8 @@ text.attributes['x'] = 0
 text.attributes['y'] = 20
 text.text = 'Tooltip'
 
-puts doc
+#puts doc
+
+formatter = REXML::Formatters::Pretty.new(2)
+formatter.compact = true # This is the magic line that does what you need!
+formatter.write(doc, $stdout)
