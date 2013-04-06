@@ -1,0 +1,72 @@
+%html
+  %head
+    %link(href="stylesheet.css" rel="stylesheet" type="text/css")
+
+    %script(src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js")
+    %script{ :src => cometio_js }
+    %script(src="/console-log-polyfill.js")
+    %script(src="/json2.js" type="text/javascript")
+  %body
+    %a#unfocus{:href => "#"}
+
+    :javascript
+      if (typeof console === "undefined") {
+        console = { log: function() {} };
+      }
+
+      function updateSection(section) {
+        console.log('updateSection', section);
+        var url = '/' + section;
+        var jqxhr = $.get(url);
+        jqxhr.done(function (data, textStatus, jqXHR) {
+          console.log('success');
+          $('#' + section).replaceWith(data);
+        });
+        jqxhr.fail(function (data, textStatus, jqXHR) {
+          alert('ajax failure ' + url);
+        });
+      }
+
+      var io = new CometIO().connect();
+      io.on("update", function(hash) {
+        if (hash.section == "unanswered_messages" || hash.section == "all") {
+          updateSection("unanswered_messages");
+        }
+        if (hash.section == "tasks" || hash.section == "all") {
+          updateSection("tasks");
+        }
+      });
+
+      $(document).ready(function() {
+        $('#tasks button.edit_task').click(function(event) {
+          var task_id = event.target.value;
+          $('#tasks-popup input.task_id').attr('value', task_id);
+          var row = $('#tasks tr[data_task_id="' + task_id + '"]');
+
+          var estimate = row.find('td.estimate').text();
+          var priority = row.find('td.priority').text();
+          var name     = row.find('td.name').text();
+
+          $('#tasks-popup input.estimate').attr('value', estimate);
+          $('#tasks-popup input.priority').attr('value', priority);
+          $('#tasks-popup input.name'    ).attr('value', name);
+
+          $('#tasks-popup').css('display', 'block');
+        });
+        $('#tasks button.delete_task').click(function(event) {
+          var task_id = event.target.value;
+          $('#tasks-popup input.task_id').attr('value', task_id);
+          $('#tasks-popup input.delete').attr('value', 'true');
+
+          $('#tasks-popup form').submit();
+        });
+        $('#tasks button.new_task').click(function(event) {
+          $('#tasks-popup').css('display', 'block');
+        });
+      });
+
+      setInterval(function() { updateSection("tasks"); }, 5 * 60 * 1000);
+
+    != haml(:_unanswered_messages)
+    %br
+    != haml(:_tasks)

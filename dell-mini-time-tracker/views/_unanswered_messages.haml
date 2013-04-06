@@ -1,0 +1,17 @@
+#unanswered_messages.section
+  %div(style='float:right')
+    Last update:
+    = Time.now.strftime('%H:%M:%S')
+
+  %table
+    %tr
+      %th age
+      %th medium
+      %th sender
+      %th decision
+    - UnansweredMessage.order('received_at').each do |message|
+      %tr{ :class => message.was_seen ? '' : 'unseen' }
+        %td= message.age
+        %td= message.medium
+        %td= message.sender
+        %td= message.decision

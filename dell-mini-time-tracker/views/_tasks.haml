@@ -1,0 +1,49 @@
+#tasks.section(style='position:relative')
+  %div(style='float:right;text-align:right')
+    Last update:
+    = Time.now.strftime('%H:%M:%S')
+    %br
+    != task_burndown_chart
+    %br
+    Hours left:
+    = sprintf('%.1f', 22.0 - (Time.now.hour + Time.now.min / 60.0))
+
+  %table
+    - Task.order('id').each do |task|
+      %tr{ :data_task_id => task.id }
+        %td.estimate= task.estimate && sprintf('%.2f', task.estimate)
+        %td.priority= task.priority
+        %td.name= task.name
+        %td
+          %button.edit_task{ :name => 'edit_task_id', :value => task.id } edit
+        %td
+          %button.delete_task{ :name => 'delete_task_id', :value => task.id } X
+    %tr
+      %td.estimate(style='border-top:1px gray solid')
+        = sprintf('%.2f', Task.all.map { |task| task.estimate || 0.0 }.sum)
+      %td.priority
+      %td.name
+      %td
+        %button.new_task{ :name => 'new_task_id' } new
+
+  #tasks-popup(style='position:absolute;top:50px;left:50px;border:1px red solid;width:250px;height:150px;background-color:black;display:none')
+    %h2 Edit Task
+
+    %form(method='post' action='/tasks/edit_task')
+
+      %input.task_id(type='hidden' name='task_id' value='new')
+      %input.delete(type='hidden' name='delete' value='false')
+  
+      Name
+      %input.name(type='text' name='name' size='60')
+      %br
+  
+      Priority
+      %input.priority(type='text' name='priority' size='1')
+      %br
+  
+      Estimate
+      %input.estimate(type='text' name='estimate' size='1')
+      %br
+  
+      %button Save
