@@ -91,6 +91,18 @@ helpers do
     '&chxs=0,aaaaaa,18|1,aaaaaa,18' +
     '">'
   end
+
+  def no_seconds(hms)
+    return nil if hms.nil?
+    return '' if hms == ''
+
+    match = hms.match(/^([0-9]+)-([0-9]+)-([0-9]+) ([0-9]+):([0-9]+)(:([0-9]+))?/)
+    if match.nil?
+      raise "Bad value: #{hms.inspect}"
+    end
+    h, m, s = match[4].to_i, match[5].to_i, (match[6] || '').to_i
+    sprintf('%02d:%02d', h, m)
+  end
 end
 
 get '/old' do
@@ -257,6 +269,17 @@ post '/post_zeo_data' do
     file.write(data.gsub('%0D%0A', "\r\n"))
   end
   "OK\n"
+end
+
+get '/today' do
+  today = Date.today.strftime('%Y-%m-%d')
+  redirect "/date/#{today}"
+end
+
+get '/date/:date' do |date|
+  raise "Bad date #{date}" if !date.match(/^[0-9-]+$/)
+  @rows = Log.where("start_date like ?", "#{date}%").order('id')
+  haml :grid
 end
 
 after do

@@ -1,0 +1,124 @@
+%html
+  %head
+    :css
+      input {
+        border: 0;
+      }
+      input.time {
+        text-align: right;
+        background-color: transparent;
+      }
+      input.text {
+        background-color: transparent;
+      }
+      input.submit {
+        width: 1px;
+        color: transparent;
+        background-color: transparent;
+      }
+      tr.odd {
+        background-color: #eee;
+      }
+      td.num {
+        color: #ccc;
+      }
+    %script= "num_lines = #{@rows.size};"
+    %script= "am_in_activity = #{@am_in_activity};"
+    %script= "hideWindowOnThisSubmit = true;"
+    :javascript
+      window.onload = function() {
+        var field = (am_in_activity) ? 'finish_date' : 'category';
+        var element = document.getElementById(field + (num_lines - 1));
+        element.focus();
+        if (am_in_activity) {
+          createSelection(element, 3, 5);
+        }
+      };
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          window.scrollTo(0, 99999);
+        }, 500);
+      });
+      document.addEventListener('keyup', function(e) {
+        if (e.keyCode == 27) { // Escape key
+          if (window.ActionLogController) {
+            window.ActionLogController.hideWindow();
+          }
+        }
+      });
+      function dofocus(element) {
+        element.rememberedValue = element.value;
+      }
+      function doblur(element) {
+        if (element.value != element.rememberedValue) {
+          element.style.backgroundColor = '#ffcccc'; // light red
+        }
+      }
+      function createSelection(field, start, end) {
+        if( field.createTextRange ) {
+          var selRange = field.createTextRange();
+          selRange.collapse(true);
+          selRange.moveStart('character', start);
+          selRange.moveEnd('character', end-start);
+          selRange.select();
+        } else if( field.setSelectionRange ) {
+          field.setSelectionRange(start, end);
+        } else if( field.selectionStart ) {
+          field.selectionStart = start;
+          field.selectionEnd = end;
+        }
+      }
+      function formSubmit() {
+        if (hideWindowOnThisSubmit && window.ActionLogController) {
+          hideWindowOnThisSubmit = false;
+          window.ActionLogController.hideWindow();
+        }
+ 
+        return true;
+      }
+  %body
+    -#= styled_flash
+    %table
+      %tr
+        %th Num
+        %th Start
+        %th Finish
+        %th Category
+        %th Notes
+      - @rows.each_with_index do |row, num|
+        %form(method='post' onsubmit='formSubmit()')
+          %tr{class: (num % 2 == 0) ? 'even' : 'odd'}
+            %td.num
+              = row.id
+              %input{type: 'hidden', name: 'id', value: row.id}
+            %td
+              - hm = (!@am_in_activity && row == @rows.last && row.start_date.nil?) ? |
+                no_seconds(@rows[num - 1].finish_date) : |
+                no_seconds(row.start_date) |
+              %input.time{type: 'text', name: 'start_date', id: "start_date#{num}",
+                          value: hm, size: 5,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+              - hms = (!@am_in_activity && row == @rows.last && row.start_date.nil?) ?     |
+                @rows[num - 1].finish_date : row.start_date         |
+              %input{type: 'hidden', name: 'start_date_seconds', value: hms}
+            %td
+              - hm = row.finish_date.nil? ?          |
+                Time.now.strftime('%H:%M') : no_seconds(row.finish_date)   |
+              %input.time{type: 'text', name: 'finish_date', id: "finish_date#{num}",
+                          value: hm, size: 5,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+              - hms = row.finish_date.nil? ?      |
+                Time.now.strftime('%H:%M:%S') : row.finish_date         |
+              %input{type: 'hidden', name: 'finish_date_seconds', value: hms}
+            %td
+              %input.text{type: 'text', name: 'category', id: "category#{num}",
+                          value: row.category, size: 20,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+            %td
+              %input.text{type: 'text', name: 'intention', id: "intention#{num}",
+                          value: row.intention, size: 30,
+                          onfocus:'dofocus(this)', onblur: 'doblur(this)'}
+            %td
+              %input.submit{type: 'submit'}
+              %input{type: 'submit', name: 'delete', value: 'delete',
+                     onclick: 'hideWindowOnThisSubmit = false'}
