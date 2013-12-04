@@ -1,0 +1,67 @@
+<html>
+<head>
+
+<style>
+body {
+  background-color: black;
+  color: white;
+  font-size: 30pt;
+  text-align: center;
+  margin-top: 200px;
+  font-family: sans-serif;
+}
+</style>
+
+<script src="jquery-1.6.4.min.js"></script>
+<script>
+
+function update_message() {
+  var hour = new Date().getHours(),
+      day_of_week = new Date().getDay(),
+      SUN = 0, MON = 1, TUE = 2, WED = 3, THU = 4, FRI = 5, SAT = 6,
+      IS_CLASS_DAY = (day_of_week == MON ||
+                      day_of_week == WED || day_of_week == FRI),
+      TOMORROW_IS_CLASS = (day_of_week == SUN ||
+                           day_of_week == TUE || day_of_week == THU),
+      message;
+
+  if (IS_CLASS_DAY && hour >= 6 && hour < 9) {
+    message = "Chug water, eat breakfast, take shower, " +
+      "DO NOT USE COMPUTER AT ALL, can check email/FB on iPhone";
+  } else if (!IS_CLASS_DAY && hour >= 6 && hour < 10) {
+    message = "It's a non-class morning.  Can you still keep moving, " +
+      "drink water, eat breakfast, take a shower without getting distracted " +
+      "using the computer OR READING BOOKS?";
+  } else if (hour >= 20 && hour < 22) {
+    message = "Remember you're aiming to get to bed around 10 p.m., which gives you less than 9 hours of sleep. Consider drinking tea, meditating, darkness, or massage with oil to settle down.";
+  } else if (hour >= 22) {
+    message = "It's past 10 p.m. and you're still up.  Remember your goal " +
+      "is to settle your nervous system and strive less and not be so resentful and incoherent when you get up.";
+  } else if (hour < 3) {
+    message = "Looks like you're up late because of some social contact. " +
+      "Are you able to settle your system and get to bed?";
+  } else {
+    message = "";
+  }
+
+  $('#message').html(message);
+};
+
+var EVERY_MINUTE = 60 * 1000;
+$(document).ready(function() {
+  update_message();
+  window.setInterval(update_message, EVERY_MINUTE);
+});
+</script>
+</head>
+<body>
+<div id='message'>
+</div>
+
+<br>
+<a href='http://localhost:8000/'>sleep until 6 a.m.</a>
+
+
+</body>
+</html>
+
